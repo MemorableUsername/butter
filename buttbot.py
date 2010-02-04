@@ -1,12 +1,13 @@
 import buttifier
 import irclib
+import random
 
 server = "irc.synirc.org"
 port = 6667
 nick = "buttebot"
 channel = "#botsploitation"
 
-class pybc_bot(irclib.SimpleIRCClient):
+class buttbot(irclib.SimpleIRCClient):
     def __init__(self, server, port, nick, channel):
         irclib.SimpleIRCClient.__init__(self)
         self.connect(server, port, nick)
@@ -24,9 +25,17 @@ class pybc_bot(irclib.SimpleIRCClient):
             else:
                 try:
                     connection.privmsg(self.channel, user+": "+
-                                       buttifier.buttify(msg[1]))
+                                       buttifier.buttify(msg[1], 
+                                                         allow_single=True))
                 except:
                     connection.action(self.channel, "glares at "+user)
+        else:
+            if random.random() < 0.1:
+                try:
+                    connection.privmsg(self.channel, buttifier.buttify(
+                            event.arguments()[0]))
+                except:
+                    pass
 
-irc = pybc_bot(server, port, nick, channel)
+irc = buttbot(server, port, nick, channel)
 irc.start()
