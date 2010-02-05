@@ -1,3 +1,4 @@
+import math
 import prob
 import re
 
@@ -6,7 +7,7 @@ from hyphenate import hyphenate_word
 class word(object):
     def __init__(self, text):
         # if the word is camelCase (or similar), break it into pieces
-        chunks = re.findall(r'(\w*?[a-z])(?=(?:[A-Z]|$))', text)
+        chunks = re.findall(r'(\w*?[a-z])(?=(?:[A-Z]|$))', text) or [text]
         self.syllables = reduce(lambda x,y: x+hyphenate_word(y), chunks, [])
 
     def __getitem__(self, i):
@@ -53,7 +54,9 @@ class scorer(object):
     block_words = set(['the', 'are', 'was', 'were', 'will', 'would', 'could', 
                        'should', 'can', 'does', 'doesn', 'this', 'that',
                        'these', 'those', 'there', 'their', 'she', 'him', 'her',
-                       'its', 'his', 'hers', 'they', 'you', 'and'])
+                       'its', 'his', 'hers', 'they', 'you', 'and', 'from',
+                       'for', 'once', 'been', 'have', 'had', 'who', 'what',
+                       'where', 'when', 'why', 'how'])
     block_sylls = set(['ing', 'butt', 'tion'])
 
     def __init__(self, sent):
@@ -65,15 +68,18 @@ class scorer(object):
         return scorer.score(score, words)
 
     def _score_word(self, sent, i):
-        if len(str(sent[i])) < 3 or str(sent[i]) in self.block_words:
+        if len(str(sent[i])) < 3 or str(sent[i]).lower() in self.block_words:
             return scorer.score(0, [])
 
         sylls = [self._score_syllable(sent, i, j) for j in range(len(sent[i]))]
-        n = len(sent[i])
-
-        score = sum(sylls) - (n-1)*n/2
+        score = int(sum(sylls) / math.sqrt(len(sylls)))
         if score == 0:
             return scorer.score(0, [])
+
+        # earlier syllables are funnier
+        for j, val in enumerate(sylls):
+            if val != 0:
+                sylls[j] += 2*(len(sylls)-j-1)
 
         if i>0:
             prev = str(sent[i-1]).lower()
@@ -91,19 +97,18 @@ class scorer(object):
         if score == 0:
             return 0
 
-        if re.match(r'^[^aeiou][aeiouy]([^aeiouy])\1$', s):
-            score += 8
+        if re.match(r'^[^aeiou][aeiouy]([^aeiouy])\1', s):
+            score += 6
         elif re.match(r'^[^aeiou][aeiouy][^aeiouy]+$', s):
             score += 2
         elif re.match(r'^[^aeiou][aeiouy][^aeiouy]', s):
             score += 1
 
-        if s[0] == 'b':
-            score += 2
-        if s[-1] == 't':
-            score += 1
+        if s[0]  == 'b': score += 2
+        if s[-1] == 't': score += 1
+        if s[-2] == 't': score += 1
 
-        score += len(sent[i])-j-1 # earlier syllables are funnier
+        score = int(score ** 1.75)
         return score
 
     def sentence(self):
@@ -121,7 +126,14 @@ class scorer(object):
         else:
             return self.values[i][j]
 
-def buttify(text, scorer=scorer, rate=40, allow_single=False):
+
+plurals = set(['men', 'women', 'goose', 'mice', 'children', 'feet', 'teeth'])
+def is_plural(word):
+    word = word.lower()
+    if word[-1] == 's' and word[-2] not in 'ui': return True
+    return word in plurals
+
+def buttify(text, scorer=scorer, rate=50, allow_single=False):
     sent = sentence(text)
     if len(sent) == 0 or (not allow_single and len(sent) == 1):
         raise ValueError("unbuttable")
@@ -139,13 +151,19 @@ def buttify(text, scorer=scorer, rate=40, allow_single=False):
     return str(sent)
 
 def buttify_word(sent, i, scores):
-    j = prob.weighted_choice(scores)
-    if sent[i][j].islower():
-        sent[i][j] = 'butt'
-    elif sent[i][j][0].isupper() and sent[i][j][1:].islower():
-        sent[i][j] = 'Butt'
+    butt = 'butt'
+    if len(sent[i]) == 1:
+        if is_plural(str(sent[i])): butt = 'butts'
+        j = 0
     else:
-        sent[i][j] = 'BUTT'
+        j = prob.weighted_choice(scores)
+
+    if sent[i][j].isupper():
+        sent[i][j] = butt.upper()
+    elif sent[i][j].istitle():
+        sent[i][j] = butt.title()
+    else:
+        sent[i][j] = butt.lower()
 
     # if there would be 3 't's in a row, remove one
     if len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
@@ -153,6 +171,7 @@ def buttify_word(sent, i, scores):
         
     if i>0 and str(sent[i-1]).lower() == 'an':
         sent[i-1][0] = sent[i-1][0][0:1]
+
 
 if __name__ == "__main__":
     import sys
