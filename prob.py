@@ -51,10 +51,24 @@ if __name__ == "__main__":
             self.assertEqual(cumsum([1,2,3,4,5]), [1,3,6,10,15])
 
         def testLookup(self):
-            cum = [0]+cumsum([2]*10)
+            cum = [0]+cumsum([5]*10)
             self.assertEqual(lookup(cum,  0), 0)
-            self.assertEqual(lookup(cum,  4), 2)
-            self.assertEqual(lookup(cum, 18), 9)
-            self.assertEqual(lookup(cum, 19), 9)
+            self.assertEqual(lookup(cum,  4), 0)
+            self.assertEqual(lookup(cum,  5), 1)
+            self.assertEqual(lookup(cum, 18), 3)
+            self.assertEqual(lookup(cum, 49), 9)
+
+            cum = [0]+cumsum([10, 0, 5, 10])
+            self.assertEqual(lookup(cum,  0), 0)
+            self.assertEqual(lookup(cum,  8), 0)
+            self.assertEqual(lookup(cum, 11), 2)
+            self.assertEqual(lookup(cum, 14), 2)
+            self.assertEqual(lookup(cum, 15), 3)
+            self.assertEqual(lookup(cum, 24), 3)
+
+            counts = [0, 0, 0, 0]
+            for i in range(cum[-1]):
+                counts[lookup(cum, i)] += 1
+            self.assertEqual(counts, [10, 0, 5, 10])
 
     unittest.main()

@@ -79,7 +79,7 @@ class scorer(object):
         # earlier syllables are funnier
         for j, val in enumerate(sylls):
             if val != 0:
-                sylls[j] += 2*(len(sylls)-j-1)
+                sylls[j] += min((len(sylls)-j-1)**2, 16)
 
         if i>0:
             prev = str(sent[i-1]).lower()
@@ -108,7 +108,7 @@ class scorer(object):
         if s[-1] == 't': score += 1
         if s[-2] == 't': score += 1
 
-        score = int(score ** 1.75)
+        score = int(score ** 1.5)
         return score
 
     def sentence(self):
