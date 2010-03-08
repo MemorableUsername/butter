@@ -19,7 +19,7 @@ class buttbot(irclib.SimpleIRCClient):
         user = event.source().split('!')[0]
         channel = event.target()
 
-        if user[-3:-1] == 'bot': return
+        if user[-3:] == 'bot': return
 
         bits = msg.split(' ', 1)
         if bits[0] == "!butte":
