@@ -2,10 +2,43 @@ import buttifier
 import irclib
 import random
 import time
+import re
+import fnmatch
 
 server = "irc.synirc.org"
 port = 6667
 nick = "buttebot"
+
+class ignore_list(list):
+    _regex_mode = re.compile(r"^/(.*)/(i?)$")
+    _glob_mode = re.compile(r"[\*\?\[\]]")
+
+    def __init__(self, filename):
+        f = open(filename)
+        for line in f:
+            line = line.strip()
+            m = self._regex_mode.search(line)
+            if m:
+                if len(m.group(2)) == 0:
+                    self.append(re.compile(m.group(1)))
+                else:
+                    self.append(re.compile(m.group(1), re.I))
+                continue
+            elif self._glob_mode.search(line):
+                self.append(re.compile( fnmatch.translate(line) ))
+            else:
+                self.append(line)
+        f.close()
+
+    def __contains__(self, name):
+        for i in self:
+            if isinstance(i, str):
+                if i == name: return True
+            elif i.search(name):
+                return True
+        return False
+
+
 
 class buttbot(irclib.SimpleIRCClient):
     def __init__(self, server, port, nick, max_channels=5):
@@ -14,12 +47,14 @@ class buttbot(irclib.SimpleIRCClient):
         self.channels_left = max_channels
         self.last_butt = 0.0 # the epoch
 
+        self.ignore = ignore_list("ignore")
+
     def on_pubmsg(self, connection, event):
         msg = event.arguments()[0]
         user = event.source().split('!')[0]
         channel = event.target()
 
-        if user[-3:] == 'bot': return
+        if user in self.ignore: return
 
         bits = msg.split(' ', 1)
         if bits[0] == "!butte":
@@ -44,5 +79,6 @@ class buttbot(irclib.SimpleIRCClient):
             connection.join(event.arguments()[0])
             self.channels_left -= 1
 
-irc = buttbot(server, port, nick)
-irc.start()
+if __name__ == "__main__":
+    irc = buttbot(server, port, nick)
+    irc.start()
