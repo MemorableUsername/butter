@@ -56,7 +56,7 @@ class scorer(object):
                        'these', 'those', 'there', 'their', 'she', 'him', 'her',
                        'its', 'his', 'hers', 'they', 'you', 'and', 'from',
                        'for', 'once', 'been', 'have', 'had', 'who', 'what',
-                       'where', 'when', 'why', 'how'])
+                       'where', 'when', 'why', 'how', 'has', 'had', 'have'])
     block_sylls = set(['ing', 'butt', 'tion'])
 
     def __init__(self, sent):
