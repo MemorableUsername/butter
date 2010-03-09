@@ -42,14 +42,11 @@ class buttbot(irclib.SimpleIRCClient):
         f.close()
 
         self.connect(config['server'], config['port'], config['nick'])
-        self.default_channels = config['channels']
         self.command = config['command']
-        try:
-            self.channels_left = config['max_channels']
-        except:
-            self.channels_left = 5
 
-        self.enemies = ignore_list(config['enemies'])
+        self.default_channels = config.get('channels', [])
+        self.channels_left = config.get('max_channels', 5)
+        self.enemies = ignore_list(config.get('enemies', []))
 
         self.last_butt = 0.0 # the epoch
 
