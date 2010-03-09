@@ -92,6 +92,10 @@ class scorer(object):
         s = sent[i][j].lower()
         if s in self.block_sylls: return 0
 
+        # check if "butt" got split across syllables
+        if s == 'but' and len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
+            return 0
+
         lengths = [0, 0, 1, 2, 4, 2, 2, 1]
         score = lengths[min(len(s), len(lengths)-1)]
         if score == 0:
