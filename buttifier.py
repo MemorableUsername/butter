@@ -67,6 +67,9 @@ class scorer(object):
                        'where', 'when', 'why', 'how', 'has', 'had', 'have'])
     block_sylls = set(['ing', 'tion'])
 
+    good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
+                         'our', 'their'])
+
     def __init__(self, sent):
         self.values = self._score_sentence(sent)
 
@@ -89,9 +92,13 @@ class scorer(object):
             if val != 0:
                 sylls[j] += min((len(sylls)-j-1)**2, 16)
 
+        # one-syllable words are always easy to butt
+        if len(sylls) == 1:
+            score += 3
+
         if i>0:
             prev = str(sent[i-1]).lower()
-            if prev == 'the' or prev == 'a' or prev == 'an':
+            if prev in self.good_prewords:
                 score += 3
 
         return scorer.score(score, sylls)
@@ -194,9 +201,24 @@ if __name__ == '__main__':
     parser.add_option('-1', '--allow-single',
                   action='store_true', dest='allow_single', default=False,
                   help='allow butting single-word sentences')
+    parser.add_option('-s', '--score',
+                  action='store_true', dest='score', default=False,
+                  help='show sentence score')
     
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print parser.get_usage()
         exit(1)
-    print buttify(args[0], allow_single=options.allow_single)
+
+    if options.score:
+        sent = sentence(args[0])
+        score = scorer(sent)
+
+        for i, word in enumerate(sent):
+            if score.word(i) == 0:
+                print "-".join(word)+"(0)",
+            else:
+                print "-".join(word)+"(%d: %s)" % (score.word(i),
+                                                   score.syllable(i)),
+    else:
+        print buttify(args[0], allow_single=options.allow_single)
