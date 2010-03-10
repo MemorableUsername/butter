@@ -60,12 +60,12 @@ class scorer(object):
             return '<%s, %s>' % (self.total, list(self))
 
     block_words = set(['the', 'are', 'was', 'were', 'will', 'would', 'could', 
-                       'should', 'can', 'does', 'doesn', 'this', 'that',
+                       'should', 'can', 'does', 'doesn', 'don', 'this', 'that',
                        'these', 'those', 'there', 'their', 'she', 'him', 'her',
                        'its', 'his', 'hers', 'they', 'you', 'and', 'from',
                        'for', 'once', 'been', 'have', 'had', 'who', 'what',
                        'where', 'when', 'why', 'how', 'has', 'had', 'have'])
-    block_sylls = set(['ing', 'butt', 'tion'])
+    block_sylls = set(['ing', 'tion'])
 
     def __init__(self, sent):
         self.values = self._score_sentence(sent)
@@ -99,6 +99,7 @@ class scorer(object):
     def _score_syllable(self, sent, i, j):
         s = sent[i][j].lower()
         if s in self.block_sylls: return 0
+        if 'butt' in s: return 0
 
         # check if "butt" got split across syllables
         if s == 'but' and len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
