@@ -5,9 +5,11 @@ import re
 from hyphenate import hyphenate_word
 
 class word(object):
+    camelcase_ex = re.compile(r'(\w*?[a-z])(?=(?:[A-Z]|$))')
+
     def __init__(self, text):
         # if the word is camelCase (or similar), break it into pieces
-        chunks = re.findall(r'(\w*?[a-z])(?=(?:[A-Z]|$))', text) or [text]
+        chunks = self.camelcase_ex.findall(text) or [text]
         self.syllables = reduce(lambda x,y: x+hyphenate_word(y), chunks, [])
 
     def __getitem__(self, i):
@@ -26,15 +28,21 @@ class sentence(object):
     words_ex = re.compile(r'(\W+)')
 
     def __init__(self, text):
-        self.words = sentence.words_ex.split(text)
-        for i in range(0, len(self.words), 2):
+        self.words = self.words_ex.split(text)
+
+        # ignore zero-character words at the ends of the list
+        self.min, self.max = 0, len(self.words)
+        if self.words[self.min]   == '': self.min += 2
+        if self.words[self.max-1] == '': self.max -= 2
+
+        for i in range(self.min, self.max, 2):
             self.words[i] = word(self.words[i])
 
     def __getitem__(self, i):
-        return self.words[i*2] # skip spaces
+        return self.words[self.min + i*2] # skip spaces
 
     def __len__(self):
-        return (len(self.words)+1)/2
+        return (self.max-self.min+1)/2
 
     def __str__(self):
         return "".join([str(i) for i in self.words])
@@ -177,6 +185,17 @@ def buttify_word(sent, i, scores):
         sent[i-1][0] = sent[i-1][0][0:1]
 
 
-if __name__ == "__main__":
-    import sys
-    print buttify(sys.argv[1], allow_single=True)
+if __name__ == '__main__':
+    from optparse import OptionParser
+
+    usage = 'usage: %prog [options] string'
+    parser = OptionParser(usage=usage)
+    parser.add_option('-1', '--allow-single',
+                  action='store_true', dest='allow_single', default=False,
+                  help='allow butting single-word sentences')
+    
+    (options, args) = parser.parse_args()
+    if len(args) != 1:
+        print parser.get_usage()
+        exit(1)
+    print buttify(args[0], allow_single=options.allow_single)

@@ -7,19 +7,19 @@ import fnmatch
 import yaml
 
 class ignore_list(list):
-    _regex_mode = re.compile(r"^/(.*)/(i?)$")
-    _glob_mode = re.compile(r"[\*\?\[\]]")
+    regex_mode_ex = re.compile(r"^/(.*)/(i?)$")
+    glob_mode_ex  = re.compile(r"[\*\?\[\]]")
 
     def __init__(self, enemies):
         for i in enemies:
-            m = self._regex_mode.search(i)
+            m = self.regex_mode_ex.search(i)
             if m:
                 if len(m.group(2)) == 0:
                     self.append(re.compile(m.group(1)))
                 else:
                     self.append(re.compile(m.group(1), re.I))
                 continue
-            elif self._glob_mode.search(i):
+            elif self.glob_mode_ex.search(i):
                 self.append(re.compile( fnmatch.translate(i) ))
             else:
                 self.append(i)
@@ -31,8 +31,6 @@ class ignore_list(list):
             elif i.search(name):
                 return True
         return False
-
-
 
 class buttbot(irclib.SimpleIRCClient):
     def __init__(self, config_file="config"):
