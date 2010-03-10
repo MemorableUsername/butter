@@ -128,7 +128,7 @@ class scorer(object):
         if s[-1] == 't': score += 1
         if s[-2] == 't': score += 1
 
-        score = int(score ** 1.5)
+        score = int(score ** 1.25)
         return score
 
     def sentence(self):
@@ -214,6 +214,7 @@ if __name__ == '__main__':
         sent = sentence(args[0])
         score = scorer(sent)
 
+        print "%d:" % score.sentence(),
         for i, word in enumerate(sent):
             if score.word(i) == 0:
                 print "-".join(word)+"(0)",
