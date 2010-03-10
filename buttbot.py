@@ -46,7 +46,7 @@ class buttbot(irclib.SimpleIRCClient):
         self.channels_left = config.get('max_channels', 5)
         self.enemies = ignore_list(config.get('enemies', []))
 
-        self.last_butt = 0.0 # the epoch
+        self.last_butt = {}
 
     def on_welcome(self, connection, event):
         for channel in self.default_channels:
@@ -69,13 +69,20 @@ class buttbot(irclib.SimpleIRCClient):
                 except:
                     connection.action(channel, "can't butt the unbuttable!")
         else:
-            now = time.time()
-            if now - self.last_butt > 15 and random.random() < 0.05:
+            now  = time.time()
+            last = self.last_butt.get(channel, 0.0) # default to the epoch
+            if now - last > 15 and random.random() < 0.05:
                 try:
                     connection.privmsg(channel, buttifier.buttify(msg))
-                    self.last_butt = now
-                except:
-                    pass
+                    self.last_butt[channel] = now
+                except: pass
+
+    def on_privmsg(self, connection, event):
+        msg = event.arguments()[0]
+        user = event.source().split('!')[0]
+        try:
+            connection.privmsg(user, buttifier.buttify(msg))
+        except: pass
 
     def on_invite(self, connection, event):
         if self.channels_left > 0:
