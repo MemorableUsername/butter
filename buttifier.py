@@ -128,7 +128,7 @@ class scorer(object):
         if s[-1] == 't': score += 1
         if s[-2] == 't': score += 1
 
-        score = int(score ** 1.25)
+        score = int(score ** 1.5)
         return score
 
     def sentence(self):
@@ -162,7 +162,7 @@ def buttify(text, scorer=scorer, rate=50, allow_single=False):
     if score.sentence() == 0:
         raise ValueError("unbuttable")
 
-    count = score.sentence()/rate+1
+    count = min(score.sentence()/rate+1, max(len(sent)/4, 1))
     words = prob.weighted_sample(score.word(), count)
 
     for i in words:
