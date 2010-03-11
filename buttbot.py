@@ -41,7 +41,7 @@ class buttbot(irclib.SimpleIRCClient):
 
         self.connect(config['server'], config['port'], config['nick'],
                      password=config.get('server_pass'),
-                     username=config.get('username')
+                     username=config.get('username'),
                      ircname=config.get('realname'))
         self.command = config['command']
 
