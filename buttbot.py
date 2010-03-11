@@ -39,16 +39,20 @@ class buttbot(irclib.SimpleIRCClient):
         config = yaml.load(f)
         f.close()
 
-        self.connect(config['server'], config['port'], config['nick'],
-                     password=config.get('server_pass'),
-                     username=config.get('username'),
-                     ircname=config.get('realname'))
-        self.command = config['command']
+        conn     = config['connection']
+        settings = config['settings']
 
-        self.nickserv_pass = config.get('nickserv_pass')
-        self.default_channels = config.get('channels', [])
-        self.channels_left = config.get('max_channels', 5)
-        self.enemies = ignore_list(config.get('enemies', []))
+        self.connect(conn['server'], conn['port'], conn['nick'],
+                     password=conn.get('server_pass'),
+                     username=conn.get('username'),
+                     ircname=conn.get('realname'))
+        self.nickserv_pass = conn.get('nickserv_pass')
+        self.default_channels = conn.get('channels', [])
+
+
+        self.command = settings['command']
+        self.channels_left = settings.get('max_invites', 5)
+        self.enemies = ignore_list(settings.get('enemies', []))
 
         self.last_butt = {}
 

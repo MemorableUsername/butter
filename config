@@ -1,12 +1,14 @@
-server: irc.zybourne.net
-port: 6667
-nick: buttebot
-username: buttebot
-realname: Buttebot
+connection:
+    server: irc.zybourne.net
+    port: 6667
+    nick: buttebot
+    username: buttebot
+    realname: Buttebot
 
-channels: ['#cobol']
-max_channels: 5
-command: '!butte'
+    channels: ['#cobol']
+settings:
+    max_invites: 5
+    command: '!butte'
 
-enemies:
-- '*bot'
+    enemies:
+    - '*bot'
