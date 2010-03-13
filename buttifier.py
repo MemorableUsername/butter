@@ -5,7 +5,7 @@ import re
 from hyphenate import hyphenate_word
 
 class word(object):
-    camelcase_ex = re.compile(r'(\w*?[a-z])(?=(?:[A-Z]|$))')
+    camelcase_ex = re.compile(r'((?:\w*?[a-z])(?=(?:[A-Z]|$))|[A-Z]+)')
 
     def __init__(self, text):
         # if the word is camelCase (or similar), break it into pieces
