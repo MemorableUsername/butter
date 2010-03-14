@@ -39,6 +39,8 @@ class sentence(object):
             self.words[i] = word(self.words[i])
 
     def __getitem__(self, i):
+        if self.min + i*2 >= self.max:
+            raise IndexError("index out of bounds")
         return self.words[self.min + i*2] # skip spaces
 
     def __len__(self):
@@ -112,23 +114,24 @@ class scorer(object):
         if s == 'but' and len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
             return 0
 
-        lengths = [0, 0, 1, 2, 4, 2, 2, 1]
+        lengths = [0, 0, 1, 2, 3, 2, 2, 1]
         score = lengths[min(len(s), len(lengths)-1)]
         if score == 0:
             return 0
 
         if re.match(r'^[^aeiou][aeiouy]([^aeiouy])\1', s):
-            score += 6
+            score += 4
         elif re.match(r'^[^aeiou][aeiouy][^aeiouy]+$', s):
             score += 2
         elif re.match(r'^[^aeiou][aeiouy][^aeiouy]', s):
             score += 1
 
-        if s[0]  == 'b': score += 2
+        if s[0] == 'b': score += 2
+        if s[0] in 'pgd' and s[1] != 'h': score += 1 # bilabial/voiced plosives
         if s[-1] == 't': score += 1
         if s[-2] == 't': score += 1
 
-        score = int(score ** 1.5)
+        score = int(score ** 1.25)
         return score
 
     def sentence(self):
@@ -153,7 +156,7 @@ def is_plural(word):
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
-def buttify(text, scorer=scorer, rate=50, allow_single=False):
+def buttify(text, scorer=scorer, rate=40, allow_single=False):
     sent = sentence(text)
     if len(sent) == 0 or (not allow_single and len(sent) == 1):
         raise ValueError("unbuttable")
