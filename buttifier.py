@@ -150,7 +150,7 @@ class scorer(object):
 plurals = set(['men', 'women', 'goose', 'mice', 'children', 'feet', 'teeth'])
 def is_plural(word):
     word = word.lower()
-    if word[-1] == 's' and word[-2] not in 'ui': return True
+    if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
 def buttify(text, scorer=scorer, rate=50, allow_single=False):
