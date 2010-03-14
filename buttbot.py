@@ -59,14 +59,29 @@ class buttbot(irclib.SimpleIRCClient):
     def _next_butt(self):
         return prob.poissonvariate(self.rate) + self.min_rate
 
+    def _join(self, conn, channel):
+        if self.channels_left > 0:
+            conn.join(channel)
+            self.channels_left -= 1
+
+    def _parted(self, channel):
+        del self.next_butt[channel]
+        self.channels_left += 1
+
     def on_welcome(self, conn, event):
         if self.nickserv_pass:
             conn.privmsg("NickServ", "IDENTIFY "+self.nickserv_pass)
         for channel in self.default_channels:
-            conn.join(channel)
+            self._join(conn, channel)
 
     def on_join(self, conn, event):
         self.next_butt[event.target()] = prob.poissonvariate(self.rate)
+
+    def on_part(self, conn, event):
+        self._parted(event.target())
+
+    def on_kick(self, conn, event):
+        self._parted(event.target())
 
     def on_pubmsg(self, conn, event):
         msg = event.arguments()[0]
@@ -92,17 +107,15 @@ class buttbot(irclib.SimpleIRCClient):
 
             self.next_butt[channel] -= 1
 
-    def on_privmsg(self, connection, event):
+    def on_privmsg(self, conn, event):
         msg = event.arguments()[0]
         user = event.source().split('!')[0]
         try:
-            connection.privmsg(user, buttifier.buttify(msg))
+            conn.privmsg(user, buttifier.buttify(msg))
         except: pass
 
-    def on_invite(self, connection, event):
-        if self.channels_left > 0:
-            connection.join(event.arguments()[0])
-            self.channels_left -= 1
+    def on_invite(self, conn, event):
+        self._join(conn, event.arguments()[0])
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
