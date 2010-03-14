@@ -1,9 +1,9 @@
 import buttifier
-import irclib
-import random
-import time
-import re
 import fnmatch
+import irclib
+import prob
+import re
+import sys
 import yaml
 
 class ignore_list(list):
@@ -49,20 +49,26 @@ class buttbot(irclib.SimpleIRCClient):
         self.nickserv_pass = conn.get('nickserv_pass')
         self.default_channels = conn.get('channels', [])
 
-
         self.command = settings['command']
-        self.channels_left = settings.get('max_invites', 5)
+        self.channels_left = settings.get('max_channels', 5)
         self.enemies = ignore_list(settings.get('enemies', []))
+        self.rate = settings.get('rate', 30)
 
-        self.last_butt = {}
+        self.next_butt = {}
 
-    def on_welcome(self, connection, event):
+    def _next_butt(self):
+        return prob.poissonvariate(self.rate) + self.min_rate
+
+    def on_welcome(self, conn, event):
         if self.nickserv_pass:
-            connection.privmsg("NickServ", "IDENTIFY "+self.nickserv_pass)
+            conn.privmsg("NickServ", "IDENTIFY "+self.nickserv_pass)
         for channel in self.default_channels:
-            connection.join(channel)
+            conn.join(channel)
 
-    def on_pubmsg(self, connection, event):
+    def on_join(self, conn, event):
+        self.next_butt[event.target()] = prob.poissonvariate(self.rate)
+
+    def on_pubmsg(self, conn, event):
         msg = event.arguments()[0]
         user = event.source().split('!')[0]
         channel = event.target()
@@ -73,19 +79,18 @@ class buttbot(irclib.SimpleIRCClient):
         if bits[0] == self.command:
             if len(msg) > 1:
                 try:
-                    connection.privmsg(channel, user+": "+
-                                       buttifier.buttify(bits[1], 
-                                                         allow_single=True))
+                    conn.privmsg(channel, user+": "+buttifier.buttify(
+                            bits[1], allow_single=True))
                 except:
-                    connection.action(channel, "can't butt the unbuttable!")
+                    conn.action(channel, "can't butt the unbuttable!")
         else:
-            now  = time.time()
-            last = self.last_butt.get(channel, 0.0) # default to the epoch
-            if now - last > 15 and random.random() < 0.05:
+            if self.next_butt[channel] == 0:
                 try:
-                    connection.privmsg(channel, buttifier.buttify(msg))
-                    self.last_butt[channel] = now
+                    conn.privmsg(channel, buttifier.buttify(msg))
+                    self.next_butt[channel] = prob.poissonvariate(self.rate)
                 except: pass
+
+            self.next_butt[channel] -= 1
 
     def on_privmsg(self, connection, event):
         msg = event.arguments()[0]
@@ -100,4 +105,7 @@ class buttbot(irclib.SimpleIRCClient):
             self.channels_left -= 1
 
 if __name__ == "__main__":
-    buttbot().start()
+    if len(sys.argv) == 2:
+        buttbot(config=sys.argv[1])
+    else:
+        buttbot().start()

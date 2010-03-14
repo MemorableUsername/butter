@@ -4,11 +4,14 @@ connection:
     nick: buttebot
     username: buttebot
     realname: Buttebot
+    # server_pass: some_password
+    # nickserv_pass: some_password
 
     channels: ['#cobol']
 settings:
-    max_invites: 5
+    max_channels: 5
     command: '!butte'
+    rate: 30 # expected number of lines to skip between butting
 
     enemies:
     - '*bot'
