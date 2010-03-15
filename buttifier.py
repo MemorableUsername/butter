@@ -175,11 +175,10 @@ def buttify(text, scorer=scorer, rate=40, allow_single=False):
 
 def buttify_word(sent, i, scores):
     butt = 'butt'
-    if len(sent[i]) == 1:
+    j = prob.weighted_choice(scores)
+
+    if j == len(sent[i])-1:
         if is_plural(str(sent[i])): butt = 'butts'
-        j = 0
-    else:
-        j = prob.weighted_choice(scores)
 
     if sent[i][j].isupper():
         sent[i][j] = butt.upper()
@@ -191,8 +190,8 @@ def buttify_word(sent, i, scores):
     # if there would be 3 't's in a row, remove one
     if len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
         sent[i][j] = sent[i][j][:-1]
-        
-    if i>0 and str(sent[i-1]).lower() == 'an':
+
+    if j==0 and i>0 and str(sent[i-1]).lower() == 'an':
         sent[i-1][0] = sent[i-1][0][0:1]
 
 
