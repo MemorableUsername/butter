@@ -98,7 +98,7 @@ class buttbot(irclib.SimpleIRCClient):
                             bits[1], allow_single=True))
                 except:
                     conn.action(channel, "can't butt the unbuttable!")
-        else:
+        elif channel in self.next_butt:
             if self.next_butt[channel] == 0:
                 try:
                     conn.privmsg(channel, buttifier.buttify(msg))
