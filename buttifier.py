@@ -5,11 +5,17 @@ import re
 from hyphenate import hyphenate_word
 
 class word(object):
-    camelcase_ex = re.compile(r'((?:\w*?[a-z])(?=(?:[A-Z]|$))|[A-Z]+)')
+    camelcase_ex = re.compile(r'(?<=[a-z])[A-Z]')
 
     def __init__(self, text):
         # if the word is camelCase (or similar), break it into pieces
-        chunks = self.camelcase_ex.findall(text) or [text]
+        chunks = []
+        i = 0
+        for m in self.camelcase_ex.finditer(text):
+            chunks.append(text[i:m.start()])
+            i = m.start()
+        chunks.append(text[i:])
+
         self.syllables = reduce(lambda x,y: x+hyphenate_word(y), chunks, [])
 
     def __getitem__(self, i):
@@ -25,7 +31,7 @@ class word(object):
         return len(self.syllables)
 
 class sentence(object):
-    words_ex = re.compile(r'(\W+)')
+    words_ex = re.compile(r'([\W_]+)')
 
     def __init__(self, text):
         self.words = self.words_ex.split(text)
