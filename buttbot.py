@@ -119,6 +119,6 @@ class buttbot(irclib.SimpleIRCClient):
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        buttbot(config=sys.argv[1])
+        buttbot(config_file=sys.argv[1]).start()
     else:
         buttbot().start()
