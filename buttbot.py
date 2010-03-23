@@ -56,16 +56,14 @@ class buttbot(irclib.SimpleIRCClient):
 
         self.next_butt = {}
 
-    def _next_butt(self):
-        return prob.poissonvariate(self.rate) + self.min_rate
-
     def _join(self, conn, channel):
         if self.channels_left > 0:
             conn.join(channel)
             self.channels_left -= 1
 
     def _parted(self, channel):
-        del self.next_butt[channel]
+        if channel in self.next_butt:
+            del self.next_butt[channel]
         self.channels_left += 1
 
     def on_welcome(self, conn, event):
@@ -106,6 +104,8 @@ class buttbot(irclib.SimpleIRCClient):
                 except: pass
 
             self.next_butt[channel] -= 1
+        else:
+            self.next_butt[channel] = prob.poissonvariate(self.rate)
 
     def on_privmsg(self, conn, event):
         msg = event.arguments()[0]
