@@ -8,6 +8,9 @@ class word(object):
     camelcase_ex = re.compile(r'(?<=[a-z])[A-Z]')
 
     def __init__(self, text):
+        # get runs of repeated characters for collapsing later
+        runs = [(i.start(), i.end()) for i in re.finditer(r'(.)\1{2,}', text)]
+
         # if the word is camelCase (or similar), break it into pieces
         chunks = []
         i = 0
@@ -17,6 +20,22 @@ class word(object):
         chunks.append(text[i:])
 
         self.syllables = reduce(lambda x,y: x+hyphenate_word(y), chunks, [])
+
+        # collapse any long runs of identical characters
+        for run in runs:
+            begin = self._find_syllable(run[0])
+            end   = self._find_syllable(run[1]-1)+1
+            self.syllables[begin:end] = ["".join(self.syllables[begin:end])]
+            
+    def _find_syllable(self, char):
+        """Find the index of the syllable containing the character at index
+           |char|"""
+        curr_len = 0
+        for i, s in enumerate(self.syllables):
+            curr_len += len(s)
+            if char < curr_len:
+                return i
+        raise ValueError("out of bounds")
 
     def __getitem__(self, i):
         return self.syllables[i]
@@ -156,7 +175,8 @@ class scorer(object):
             return self.values[i][j]
 
 
-plurals = set(['men', 'women', 'goose', 'mice', 'children', 'feet', 'teeth'])
+plurals = set(['men', 'women', 'feet', 'geese', 'teeth', 'lice', 'mice',
+               'children'])
 def is_plural(word):
     word = word.lower()
     if word[-1] == 's' and word[-2] not in 'ius': return True
@@ -183,8 +203,13 @@ def buttify_word(sentence, word, scores):
     butt = 'butt'
     syllable = prob.weighted_choice(scores)
 
+    # if the syllable has repeated characters, emulate that
+    m = re.search(r'(.)\1{2,}', sentence[word][syllable])
+    if m:
+        butt = 'b' + 'u'*(m.end() - m.start()) + 'tt'
+
     if syllable == len(sentence[word])-1:
-        if is_plural(str(sentence[word])): butt = 'butts'
+        if is_plural(str(sentence[word])): butt += 's'
 
     if sentence[word][syllable].isupper():
         sentence[word][syllable] = butt.upper()
