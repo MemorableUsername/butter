@@ -179,26 +179,28 @@ def buttify(text, scorer=scorer, rate=40, allow_single=False):
 
     return str(sent)
 
-def buttify_word(sent, i, scores):
+def buttify_word(sentence, word, scores):
     butt = 'butt'
-    j = prob.weighted_choice(scores)
+    syllable = prob.weighted_choice(scores)
 
-    if j == len(sent[i])-1:
-        if is_plural(str(sent[i])): butt = 'butts'
+    if syllable == len(sentence[word])-1:
+        if is_plural(str(sentence[word])): butt = 'butts'
 
-    if sent[i][j].isupper():
-        sent[i][j] = butt.upper()
-    elif sent[i][j].istitle():
-        sent[i][j] = butt.title()
+    if sentence[word][syllable].isupper():
+        sentence[word][syllable] = butt.upper()
+    elif sentence[word][syllable].istitle():
+        sentence[word][syllable] = butt.title()
     else:
-        sent[i][j] = butt.lower()
+        sentence[word][syllable] = butt.lower()
 
     # if there would be 3 't's in a row, remove one
-    if len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
-        sent[i][j] = sent[i][j][:-1]
+    if (len(sentence[word]) > syllable+1 and
+        sentence[word][syllable+1][0].lower() == 't'):
+        sentence[word][syllable] = sentence[word][syllable][:-1]
 
-    if j==0 and i>0 and str(sent[i-1]).lower() == 'an':
-        sent[i-1][0] = sent[i-1][0][0:1]
+    # if this is the first syllable and the previous word is "an", fix it
+    if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
+        sentence[word-1][0] = sentence[word-1][0][0:1]
 
 
 if __name__ == '__main__':
