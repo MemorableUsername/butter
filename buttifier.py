@@ -2,6 +2,7 @@ import math
 import prob
 import re
 
+from collections import defaultdict
 from hyphenate import hyphenate_word
 
 class word(object):
@@ -54,14 +55,19 @@ class sentence(object):
 
     def __init__(self, text):
         self.words = self.words_ex.split(text)
+        self.same_words = defaultdict(list)
 
         # ignore zero-character words at the ends of the list
         self.min, self.max = 0, len(self.words)
         if self.words[self.min]   == '': self.min += 2
         if self.words[self.max-1] == '': self.max -= 2
 
-        for i in range(self.min, self.max, 2):
-            self.words[i] = word(self.words[i])
+        for werd, token in enumerate(range(self.min, self.max, 2)):
+            self.words[token] = word(self.words[token])
+            self.same_words[str(self.words[token]).lower()].append(werd)
+
+    def related(self, i):
+        return self.same_words[ str(self[i]).lower() ]            
 
     def __getitem__(self, i):
         if self.min + i*2 >= self.max:
@@ -86,22 +92,27 @@ class scorer(object):
         def __repr__(self):
             return '<%s, %s>' % (self.total, list(self))
 
-    block_words = set(['the', 'are', 'was', 'were', 'will', 'would', 'could', 
-                       'should', 'can', 'does', 'doesn', 'don', 'this', 'that',
-                       'these', 'those', 'there', 'their', 'she', 'him', 'her',
-                       'its', 'his', 'hers', 'they', 'you', 'and', 'from',
-                       'for', 'once', 'been', 'have', 'had', 'who', 'what',
-                       'where', 'when', 'why', 'how', 'has', 'had', 'have'])
+    block_words = set(['the', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
+                       'will', 'won', 'would', 'could', 'should', 'can', 'does',
+                       'doesn', 'don', 'this', 'that', 'these', 'those',
+                       'there', 'their', 'she', 'him', 'her', 'its', 'his',
+                       'hers', 'they', 'you', 'and', 'from', 'for', 'once',
+                       'been', 'have', 'had', 'who', 'what', 'where', 'when',
+                       'why', 'how', 'has', 'had', 'have', 'yes', 'yeah', 'yah',
+                       'yep', 'nah', 'nope'])
     block_sylls = set(['ing', 'tion'])
 
     good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
-                         'our', 'their'])
+                         'our', 'their', 'to'])
 
     def __init__(self, sent):
         self.values = self._score_sentence(sent)
 
     def _score_sentence(self, sent):
         words = [self._score_word(sent, i) for i in range(len(sent))]
+        for i in range(len(sent)):
+            factor = 1.25 ** (len(sent.related(i))-1)
+            words[i].total = int(words[i].total * factor)
         score = reduce(lambda x, y: x+y.total, words, 0)
         return scorer.score(score, words)
 
@@ -126,7 +137,7 @@ class scorer(object):
         if i>0:
             prev = str(sent[i-1]).lower()
             if prev in self.good_prewords:
-                score += 3
+                score += 5
 
         return scorer.score(score, sylls)
 
@@ -194,14 +205,19 @@ def buttify(text, scorer=scorer, rate=40, allow_single=False):
     count = min(score.sentence()/rate+1, max(len(sent)/4, 1))
     words = prob.weighted_sample(score.word(), count)
 
+    curr_count = 0
     for i in words:
-        buttify_word(sent, i, score.syllable(i))
+        syllable = prob.weighted_choice(score.syllable(i))
+        for j in sent.related(i):
+            buttify_word(sent, j, syllable)
+            curr_count += 1
+        if curr_count >= count:
+            break
 
     return str(sent)
 
-def buttify_word(sentence, word, scores):
+def buttify_word(sentence, word, syllable):
     butt = 'butt'
-    syllable = prob.weighted_choice(scores)
 
     # if the syllable has repeated characters, emulate that
     m = re.search(r'(.)\1{2,}', sentence[word][syllable])
