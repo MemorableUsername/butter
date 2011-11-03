@@ -26,5 +26,8 @@ class ButtifierTest(unittest.TestCase):
         self.assertEqual("-".join(buttifier.word("TESt")), "TESt")
         self.assertEqual("-".join(buttifier.word("TEST")), "TEST")
 
+    def test_runs(self):
+        self.assertEqual("-".join(buttifier.word("whaaaaat")), "whaaaaat")
+
 if __name__ == '__main__':
     unittest.main()

@@ -44,11 +44,14 @@ class word(object):
     def __setitem__(self, i, value):
         self.syllables[i] = value
 
-    def __str__(self):
-        return "".join(self.syllables)
-
     def __len__(self):
         return len(self.syllables)
+
+    def __iter__(self):
+        return iter(self.syllables)
+
+    def __str__(self):
+        return "".join(self.syllables)
 
 class sentence(object):
     words_ex = re.compile(r'([\W_]+)')
@@ -76,6 +79,10 @@ class sentence(object):
 
     def __len__(self):
         return (self.max-self.min+1)/2
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
 
     def __str__(self):
         return "".join([str(i) for i in self.words])
@@ -109,18 +116,34 @@ class scorer(object):
         self.values = self._score_sentence(sent)
 
     def _score_sentence(self, sent):
-        words = [self._score_word(sent, i) for i in range(len(sent))]
+        words = [self._score_word(werd) for werd in sent]
+
+        # words after good pre-words
+        for i in range(len(sent)):
+            if i == 0: continue
+            prev = str(sent[i-1]).lower()
+            if prev in self.good_prewords:
+                words[i].total += 5
+
+        # repeated words
         for i in range(len(sent)):
             factor = 1.25 ** (len(sent.related(i))-1)
             words[i].total = int(words[i].total * factor)
+
         score = reduce(lambda x, y: x+y.total, words, 0)
         return scorer.score(score, words)
 
-    def _score_word(self, sent, i):
-        if len(str(sent[i])) < 3 or str(sent[i]).lower() in self.block_words:
+    def _score_word(self, werd):
+        if len(str(werd)) < 3 or str(werd).lower() in self.block_words:
             return scorer.score(0, [])
 
-        sylls = [self._score_syllable(sent, i, j) for j in range(len(sent[i]))]
+        sylls = [self._score_syllable(syll) for syll in werd]
+        for i in range(len(werd)):
+            if len(werd) == i+1: break
+            # check if "butt" got split across syllables
+            if werd[i] == 'but' and werd[i+1][0].lower() == 't':
+                sylls[i] = 0
+
         score = int(sum(sylls) / math.sqrt(len(sylls)))
         if score == 0:
             return scorer.score(0, [])
@@ -134,38 +157,30 @@ class scorer(object):
         if len(sylls) == 1:
             score += 3
 
-        if i>0:
-            prev = str(sent[i-1]).lower()
-            if prev in self.good_prewords:
-                score += 5
-
         return scorer.score(score, sylls)
 
-    def _score_syllable(self, sent, i, j):
-        s = sent[i][j].lower()
-        if s in self.block_sylls: return 0
-        if 'butt' in s: return 0
-
-        # check if "butt" got split across syllables
-        if s == 'but' and len(sent[i]) > j+1 and sent[i][j+1][0].lower() == 't':
-            return 0
+    def _score_syllable(self, syll):
+        syll = syll.lower()
+        if syll in self.block_sylls: return 0
+        if 'butt' in syll: return 0
 
         lengths = [0, 0, 1, 2, 3, 2, 2, 1]
-        score = lengths[min(len(s), len(lengths)-1)]
+        score = lengths[min(len(syll), len(lengths)-1)]
         if score == 0:
             return 0
 
-        if re.match(r'^[^aeiou][aeiouy]([^aeiouy])\1', s):
+        if re.match(r'^[^aeiou][aeiouy]([^aeiouy])\1', syll):
             score += 4
-        elif re.match(r'^[^aeiou][aeiouy][^aeiouy]+$', s):
+        elif re.match(r'^[^aeiou][aeiouy][^aeiouy]+$', syll):
             score += 2
-        elif re.match(r'^[^aeiou][aeiouy][^aeiouy]', s):
+        elif re.match(r'^[^aeiou][aeiouy][^aeiouy]', syll):
             score += 1
 
-        if s[0] == 'b': score += 2
-        if s[0] in 'pgd' and s[1] != 'h': score += 1 # bilabial/voiced plosives
-        if s[-1] == 't': score += 1
-        if s[-2] == 't': score += 1
+        if syll[0] == 'b': score += 2
+        # bilabial/voiced plosives
+        if syll[0] in 'pgd' and s[1] != 'h': score += 1
+        if syll[-1] == 't': score += 1
+        if syll[-2] == 't': score += 1
 
         score = int(score ** 1.25)
         return score
