@@ -178,7 +178,7 @@ class scorer(object):
 
         if syll[0] == 'b': score += 2
         # bilabial/voiced plosives
-        if syll[0] in 'pgd' and s[1] != 'h': score += 1
+        if syll[0] in 'pgd' and syll[1] != 'h': score += 1
         if syll[-1] == 't': score += 1
         if syll[-2] == 't': score += 1
 
