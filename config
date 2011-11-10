@@ -1,5 +1,5 @@
 connection:
-    server: irc.zybourne.net
+    server: irc.synirc.org
     port: 6667
     nick: buttebot
     username: buttebot
@@ -12,6 +12,7 @@ settings:
     max_channels: 5
     command: '!butte'
     rate: 30 # expected number of lines to skip between butting
+    max_log: 100
 
     enemies:
     - '*bot'
