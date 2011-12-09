@@ -37,7 +37,6 @@ class buttbot(ircbot.ircbot):
                 self.log.pop()
             return {"msg": result, "to_user": explicit}
         except:
-            conn.action(channel, msg)
             if explicit:
                 conn.action(channel, "can't butt the unbuttable!")
             return None
@@ -52,6 +51,7 @@ class buttbot(ircbot.ircbot):
             self.next_butt[channel] -= 1
         else:
             self.next_butt[channel] = prob.poissonvariate(self.rate)
+        
         return None
 
     def buttify(self, conn, channel, msg, **kwargs):
