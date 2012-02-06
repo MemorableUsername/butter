@@ -29,57 +29,66 @@ class buttbot(ircbot.ircbot):
         self.default_local_command = self.buttify
         self.default_global_command = self.auto_buttify
 
-    def _buttify(self, conn, channel, user, msg, explicit):
-        try:
-            result = buttifier.buttify(msg, allow_single=explicit)
-            self.log.appendleft({"in": msg, "out": result})
-            if len(self.log) > self.max_log:
-                self.log.pop()
-            return {"msg": result, "to_user": explicit}
-        except:
-            if explicit:
-                conn.action(channel, "can't butt the unbuttable!")
-            return None
+    def _log_buttification(self, i, o):
+        self.log.appendleft({"in": i, "out": o})
+        if len(self.log) > self.max_log:
+            self.log.pop()
 
     def auto_buttify(self, conn, channel, msg, **kwargs):
-        if channel in self.next_butt:
-            if self.next_butt[channel] == 0:
-                result = self._buttify(conn, channel, None, msg, False)
-                if result:
-                    self.next_butt[channel] = prob.poissonvariate(self.rate)
-                    return result
-            self.next_butt[channel] -= 1
-        else:
+        """Listen for all chat and randomly buttify lines"""
+        if channel not in self.next_butt:
             self.next_butt[channel] = prob.poissonvariate(self.rate)
-        
-        return None
+            return
+
+        try:
+            sent, score = buttifier.score_sentence(msg)
+
+            if self.next_butt[channel] <= score.sentence():
+                result = buttifier.buttify_sentence(sent, score)
+                if result:
+                    self._log_buttification(msg, result)
+                    self.next_butt[channel] = prob.poissonvariate(self.rate)
+                    return { "msg": result, "to_user": False }
+        except:
+            pass
+
+        self.next_butt[channel] -= 1
 
     def buttify(self, conn, channel, msg, **kwargs):
-        return self._buttify(conn, channel, None, msg, True)
+        try:
+            result = buttifier.buttify(msg, allow_single=True)
+            if result:
+                self._log_buttification(msg, result)
+                return result
+        except Exception as e:
+            return { "msg": "can't butt the unbuttable!", "action": True }
 
     def get_log(self, conn, channel, msg, **kwargs):
         try:
             i = int(msg)-1
         except:
-            return {"msg": "syntax: log [message]", "to_user": True}
+            return "syntax: log [message]"
+
         try:
-            return {"msg": self.log[i]["out"], "to_user": True}
+            return self.log[i]["out"]
         except:
-            return {"msg": "couldn't find message!", "to_user": True}
+            return "couldn't find message!"
 
     def rebuttify(self, conn, channel, msg, **kwargs):
         try:
             i = int(msg)-1
         except:
-            return {"msg": "syntax: rebutt [message]", "to_user": True}
+            return "syntax: rebutt [message]"
+
         try:
-            return self._buttify(conn, channel, None, self.log[i]["in"], True)
+            return self.buttify(conn, channel, msg=self.log[i]["in"])
         except:
-            return {"msg": "couldn't find message!", "to_user": True}
+            return "couldn't find message!"
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        buttbot(config_file=sys.argv[1]).start()
+        bot = buttbot(config_file=sys.argv[1])
     else:
-        buttbot().start()
+        bot = buttbot()
+    bot.start()

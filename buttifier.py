@@ -103,10 +103,10 @@ class scorer(object):
                        'will', 'won', 'would', 'could', 'should', 'can', 'does',
                        'doesn', 'don', 'this', 'that', 'these', 'those',
                        'there', 'their', 'she', 'him', 'her', 'its', 'his',
-                       'hers', 'they', 'you', 'and', 'also', 'from', 'for',
-                       'once', 'been', 'have', 'had', 'who', 'what', 'where',
-                       'when', 'why', 'how', 'has', 'had', 'have', 'yes',
-                       'yeah', 'yah', 'yep', 'nah', 'nope'])
+                       'hers', 'they', 'you', 'and', 'but', 'not', 'also', 
+                       'from', 'for', 'once', 'been', 'have', 'had', 'who',
+                       'what', 'where', 'when', 'why', 'how', 'has', 'had',
+                       'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope'])
     block_sylls = set(['ing', 'tion'])
 
     good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
@@ -130,7 +130,8 @@ class scorer(object):
             factor = 1.25 ** (len(sent.related(i))-1)
             words[i].total = int(words[i].total * factor)
 
-        score = reduce(lambda x, y: x+y.total, words, 0)
+        score = round(reduce(lambda x, y: x+y.total, words, 0) /
+                      (len(words) ** 0.75))
         return scorer.score(score, words)
 
     def _score_word(self, werd):
@@ -208,15 +209,18 @@ def is_plural(word):
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
-def buttify(text, scorer=scorer, rate=40, allow_single=False):
+def score_sentence(text, scorer=scorer, allow_single=False):
     sent = sentence(text)
     if len(sent) == 0 or (not allow_single and len(sent) == 1):
-        raise ValueError("unbuttable")
+        raise ValueError("sentence too short")
 
     score = scorer(sent)
     if score.sentence() == 0:
-        raise ValueError("unbuttable")
+        raise ValueError("sentence has no buttable words")
 
+    return sent, score
+
+def buttify_sentence(sent, score, rate=40):
     count = min(score.sentence()/rate+1, max(len(sent)/4, 1))
     words = prob.weighted_sample(score.word(), count)
 
@@ -258,6 +262,9 @@ def buttify_word(sentence, word, syllable):
     if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
         sentence[word-1][0] = sentence[word-1][0][0:1]
 
+def buttify(text, scorer=scorer, rate=40, allow_single=False):
+    sent, score = score_sentence(text, scorer, allow_single)
+    return buttify_sentence(sent, score)
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -280,7 +287,7 @@ if __name__ == '__main__':
         sent = sentence(args[0])
         score = scorer(sent)
 
-        print "%d:" % score.sentence(),
+        print "%f:" % score.sentence(),
         for i, word in enumerate(sent):
             if score.word(i) == 0:
                 print "-".join(word)+"(0)",

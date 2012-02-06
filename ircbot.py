@@ -79,6 +79,21 @@ class ircbot(irclib.SimpleIRCClient):
             del self.next_butt[channel]
         self.channels_left += 1
 
+    def _respond(self, conn, msg, channel=None, user=None):
+        if msg is None: return
+        target = channel or user
+
+        if isinstance(msg, basestring):
+            conn.privmsg(target, msg)
+        else:
+            response = msg["msg"]
+            if msg.get("action", False):
+                conn.action(target, response)
+            else:
+                if msg.get("to_user", True):
+                    response = target+": "+response
+                conn.privmsg(target, response)
+
     def on_welcome(self, conn, event):
         if self.nickserv_pass:
             conn.privmsg("NickServ", "IDENTIFY "+self.nickserv_pass)
@@ -123,12 +138,7 @@ class ircbot(irclib.SimpleIRCClient):
                 result = command(conn=conn, channel=channel, user=user,
                                  msg=global_args)
 
-        if result:
-            response = result["msg"]
-            if result.get("to_user", False):
-                response = user+": "+response
-
-            conn.privmsg(channel, response)
+        self._respond(conn, result, channel=channel, user=user)
 
     def on_privmsg(self, conn, event):
         msg = event.arguments()[0]
@@ -142,8 +152,7 @@ class ircbot(irclib.SimpleIRCClient):
         if command:
             result = command(conn=conn, channel=None, user=user, msg=args)
 
-        if result:
-            conn.privmsg(user, result["msg"])
+        self._respond(conn, result, user=user)
 
     def on_invite(self, conn, event):
         self._join(conn, event.arguments()[0])
