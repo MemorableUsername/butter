@@ -147,20 +147,21 @@ class scorer(object):
     def _score_sentence(self, sent):
         words = [self._score_word(werd) for werd in sent]
 
-        # words after good pre-words
         for i in range(len(sent)):
-            if i == 0: continue
-            prev = str(sent[i-1]).lower()
-            if prev in self.good_prewords:
-                words[i].total += 5
+            if words[i].total == 0: continue
 
-        # repeated words
-        for i in range(len(sent)):
+            # words after good pre-words
+            if i > 0:
+                prev = str(sent[i-1]).lower()
+                if prev in self.good_prewords:
+                    words[i].total += 5
+
+            # repeated words
             factor = 1.25 ** (len(sent.related(i))-1)
             words[i].total = int(words[i].total * factor)
 
-        score = round(reduce(lambda x, y: x+y.total, words, 0) /
-                      (len(words) ** 0.75))
+        score = int(reduce(lambda x, y: x+y.total, words, 0) /
+                    (len(words) ** 0.75))
         return scorer.score(score, words)
 
     def _score_word(self, werd):
