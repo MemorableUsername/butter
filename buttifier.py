@@ -53,12 +53,38 @@ class word(object):
     def __str__(self):
         return "".join(self.syllables)
 
+class unword(word):
+    def __init__(self, text):
+        self.syllables = [text]
+
 class sentence(object):
     words_ex = re.compile(r'([\W_]+)')
+    space_ex = re.compile(r'\s')
 
     def __init__(self, text):
         self.words = self.words_ex.split(text)
         self.same_words = defaultdict(list)
+
+        # rejoin any URLs together so they count as one (un)word
+        i = 0
+        urls = []
+        while i < len(self.words):
+            if self.words[i] == "www":
+                start = i
+            elif self.words[i] == "://" and i > 0:
+                start = i-1
+            else:
+                i += 1
+                continue
+
+            end = len(self.words)
+            for j in range(i, len(self.words)):
+                if self.space_ex.search(self.words[j]):
+                    end = j
+                    break
+            self.words[start:end] = ["".join(self.words[start:end])]
+            urls.append(start)
+            i = start+1
 
         # ignore zero-character words at the ends of the list
         self.min, self.max = 0, len(self.words)
@@ -66,8 +92,11 @@ class sentence(object):
         if self.words[self.max-1] == '': self.max -= 2
 
         for werd, token in enumerate(range(self.min, self.max, 2)):
-            self.words[token] = word(self.words[token])
-            self.same_words[str(self.words[token]).lower()].append(werd)
+            if token in urls:
+                self.words[token] = unword(self.words[token])
+            else:
+                self.words[token] = word(self.words[token])
+                self.same_words[str(self.words[token]).lower()].append(werd)
 
     def related(self, i):
         return self.same_words[ str(self[i]).lower() ]            
@@ -135,7 +164,8 @@ class scorer(object):
         return scorer.score(score, words)
 
     def _score_word(self, werd):
-        if len(str(werd)) < 3 or str(werd).lower() in self.block_words:
+        if (len(str(werd)) < 3 or str(werd).lower() in self.block_words or
+            isinstance(werd, unword)):
             return scorer.score(0, [])
 
         sylls = [self._score_syllable(syll) for syll in werd]
