@@ -29,5 +29,11 @@ class ButtifierTest(unittest.TestCase):
     def test_runs(self):
         self.assertEqual("-".join(buttifier.word("whaaaaat")), "whaaaaat")
 
+    def test_url(self):
+        sent = buttifier.sentence("a url: http://www.example.com/")
+        self.assertEqual(str(sent[0]), "a")
+        self.assertEqual(str(sent[1]), "url")
+        self.assertEqual(str(sent[2]), "http://www.example.com/")
+
 if __name__ == '__main__':
     unittest.main()
