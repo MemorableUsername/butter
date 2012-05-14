@@ -241,7 +241,15 @@ def is_plural(word):
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
-past_tense = set(['ran', 'shot', 'wrote', 'came'])
+past_tense = set([
+    'ate', 'became', 'began', 'bent', 'blew', 'broke', 'bought', 'brought',
+    'built', 'burnt', 'came', 'caught', 'chose', 'did', 'drew', 'drank',
+    'dreamt', 'drove', 'dug', 'fell', 'flew', 'forgot', 'fought', 'found',
+    'gave', 'grew', 'heard', 'held', 'hid', 'kept', 'knew', 'leapt', 'learnt',
+    'made', 'meant', 'met', 'paid', 'ran', 'rang', 'said', 'sang', 'sank',
+    'sent', 'shook', 'shot', 'slept', 'slid', 'sold', 'spent', 'spoke', 'stank',
+    'stole', 'stood', 'stuck', 'swam', 'taught', 'threw', 'told', 'took',
+    'tore', 'went', 'woke', 'won', 'wore', 'wrote'])
 def is_past_tense(word):
     word = word.lower()
     if word[-2:] == 'ed': return True
