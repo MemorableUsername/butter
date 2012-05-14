@@ -260,7 +260,6 @@ def score_sentence(text, scorer=scorer, allow_single=False):
 
 def buttify_sentence(sent, score, rate=40):
     count = min(sum(score.word())/rate+1, max(len(sent)/4, 1))
-    print sum(score.word()), count
     words = prob.weighted_sample(score.word(), count)
 
     curr_count = 0
