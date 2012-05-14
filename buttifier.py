@@ -135,7 +135,8 @@ class scorer(object):
                        'hers', 'they', 'you', 'and', 'but', 'not', 'also', 
                        'from', 'for', 'once', 'been', 'have', 'had', 'who',
                        'what', 'where', 'when', 'why', 'how', 'has', 'had',
-                       'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope'])
+                       'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
+                       'with', 'without'])
     block_sylls = set(['ing', 'tion'])
 
     good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
