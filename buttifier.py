@@ -241,6 +241,12 @@ def is_plural(word):
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
+past_tense = set(['ran', 'shot', 'wrote', 'came'])
+def is_past_tense(word):
+    word = word.lower()
+    if word[-2:] == 'ed': return True
+    return word in past_tense
+
 def score_sentence(text, scorer=scorer, allow_single=False):
     sent = sentence(text)
     if len(sent) == 0 or (not allow_single and len(sent) == 1):
@@ -277,7 +283,10 @@ def buttify_word(sentence, word, syllable):
         butt = 'b' + 'u'*(m.end() - m.start()) + 'tt'
 
     if syllable == len(sentence[word])-1:
-        if is_plural(str(sentence[word])): butt += 's'
+        if is_plural(str(sentence[word])):
+            butt += 's'
+        elif is_past_tense(str(sentence[word])):
+            butt += 'ed'
 
     if sentence[word][syllable].isupper():
         sentence[word][syllable] = butt.upper()
