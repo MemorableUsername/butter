@@ -266,7 +266,7 @@ def score_sentence(text, scorer=scorer, allow_single=False):
 
     return sent, score
 
-def buttify_sentence(sent, score, rate=40):
+def buttify_sentence(sent, score, rate=60):
     count = min(sum(score.word())/rate+1, max(len(sent)/4, 1))
     words = prob.weighted_sample(score.word(), count)
 
@@ -311,7 +311,7 @@ def buttify_word(sentence, word, syllable):
     if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
         sentence[word-1][0] = sentence[word-1][0][0:1]
 
-def buttify(text, scorer=scorer, rate=50, allow_single=False):
+def buttify(text, scorer=scorer, rate=60, allow_single=False):
     sent, score = score_sentence(text, scorer, allow_single)
     return buttify_sentence(sent, score)
 
