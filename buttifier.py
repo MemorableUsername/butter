@@ -136,7 +136,7 @@ class scorer(object):
                        'from', 'for', 'once', 'been', 'have', 'had', 'who',
                        'what', 'where', 'when', 'why', 'how', 'has', 'had',
                        'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
-                       'with', 'without'])
+                       'with', 'without', 'then', 'which', 'your'])
     block_sylls = set(['ing', 'sion', 'tion'])
 
     good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
@@ -252,7 +252,7 @@ past_tense = set([
     'tore', 'went', 'woke', 'won', 'wore', 'wrote'])
 def is_past_tense(word):
     word = word.lower()
-    if word[-2:] == 'ed': return True
+    if word[-2:] == 'ed' and word[-3] not in 'ae': return True
     return word in past_tense
 
 def score_sentence(text, scorer=scorer, allow_single=False):
