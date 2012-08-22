@@ -13,24 +13,22 @@ next_butts = {}
 
 @hook.singlethread
 @hook.event("PRIVMSG")
-def autobutt(args, bot=None, say=None):
-    channel, msg = args
+def autobutt(_, chan=None, msg=None, bot=None, say=None):
     rate = bot.config.get("butt_rate", 30)
 
-    if channel not in next_butts:
-        next_butts[channel] = prob.poissonvariate(rate)
+    if chan not in next_butts:
+        next_butts[chan] = prob.poissonvariate(rate)
         return
 
-    next_butts[channel] -= 1
-    print next_butts[channel]
+    next_butts[chan] -= 1
 
     try:
         sent, score = buttifier.score_sentence(msg)
 
-        if next_butts[channel] <= score.sentence():
+        if next_butts[chan] <= score.sentence():
             result = buttifier.buttify_sentence(sent, score)
             if result:
-                next_butts[channel] = prob.poissonvariate(rate)
+                next_butts[chan] = prob.poissonvariate(rate)
                 say(result)
     except:
         pass
