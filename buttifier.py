@@ -87,9 +87,10 @@ class sentence(object):
             i = start+1
 
         # ignore zero-character words at the ends of the list
-        self.min, self.max = 0, len(self.words)
-        if self.words[self.min]   == '': self.min += 2
-        if self.words[self.max-1] == '': self.max -= 2
+        self.min = 2 if self.words[0] == '' else 0
+        self.max = len(self.words)
+        if self.words[-1] == '' and len(self.words) > 1:
+            self.max -= 2
 
         for werd, token in enumerate(range(self.min, self.max, 2)):
             if token in urls:
@@ -107,7 +108,7 @@ class sentence(object):
         return self.words[self.min + i*2] # skip spaces
 
     def __len__(self):
-        return (self.max-self.min+1)/2
+        return (self.max-self.min+1) / 2
 
     def __iter__(self):
         for i in range(len(self)):
@@ -142,10 +143,10 @@ class scorer(object):
     good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
                          'our', 'their', 'to'])
 
-    def __init__(self, sent):
-        self.values = self._score_sentence(sent)
+    def __init__(self, sent, min_words=2):
+        self.values = self._score_sentence(sent, min_words)
 
-    def _score_sentence(self, sent):
+    def _score_sentence(self, sent, min_words):
         words = [self._score_word(werd) for werd in sent]
 
         for i in range(len(sent)):
@@ -161,8 +162,11 @@ class scorer(object):
             factor = 1.25 ** (len(sent.related(i))-1)
             words[i].total = int(words[i].total * factor)
 
-        score = int(reduce(lambda x, y: x+y.total, words, 0) /
-                    (len(words) ** 0.75))
+        if len(words) >= min_words:
+            score = int(reduce(lambda x, y: x+y.total, words, 0) /
+                        (len(words) ** 0.75))
+        else:
+            score = 0
         return scorer.score(score, words)
 
     def _score_word(self, werd):
@@ -255,15 +259,9 @@ def is_past_tense(word):
     if word[-2:] == 'ed' and word[-3] not in 'ae': return True
     return word in past_tense
 
-def score_sentence(text, scorer=scorer, allow_single=False):
+def score_sentence(text, scorer=scorer, min_words=2):
     sent = sentence(text)
-    if len(sent) == 0 or (not allow_single and len(sent) == 1):
-        raise ValueError("sentence too short")
-
-    score = scorer(sent)
-    if score.sentence() == 0:
-        raise ValueError("sentence has no buttable words")
-
+    score = scorer(sent, min_words)
     return sent, score
 
 def buttify_sentence(sent, score, rate=60):
@@ -311,8 +309,10 @@ def buttify_word(sentence, word, syllable):
     if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
         sentence[word-1][0] = sentence[word-1][0][0:1]
 
-def buttify(text, scorer=scorer, rate=60, allow_single=False):
-    sent, score = score_sentence(text, scorer, allow_single)
+def buttify(text, scorer=scorer, rate=60, min_words=2):
+    sent, score = score_sentence(text, scorer, min_words)
+    if score.sentence() == 0:
+        raise ValueError('sentence has too few buttable words')
     return buttify_sentence(sent, score)
 
 if __name__ == '__main__':
@@ -320,9 +320,9 @@ if __name__ == '__main__':
 
     usage = 'usage: %prog [options] string'
     parser = OptionParser(usage=usage)
-    parser.add_option('-1', '--allow-single',
-                  action='store_true', dest='allow_single', default=False,
-                  help='allow butting single-word sentences')
+    parser.add_option('-m', '--min-words',
+                  action='store', type='int', dest='min_words', default=2,
+                  help='minimum number of words in a sentence')
     parser.add_option('-s', '--score',
                   action='store_true', dest='score', default=False,
                   help='show sentence score')
@@ -336,7 +336,7 @@ if __name__ == '__main__':
         sent = sentence(args[0])
         score = scorer(sent)
 
-        print "%f:" % score.sentence(),
+        print "%d:" % score.sentence(),
         for i, word in enumerate(sent):
             if score.word(i) == 0:
                 print "-".join(word)+"(0)",
@@ -344,4 +344,4 @@ if __name__ == '__main__':
                 print "-".join(word)+"(%d: %s)" % (score.word(i),
                                                    score.syllable(i)),
     else:
-        print buttify(args[0], allow_single=options.allow_single)
+        print buttify(args[0], min_words=options.min_words)
