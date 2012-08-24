@@ -11,6 +11,7 @@ def butt(msg, me=None):
         return buttifier.buttify(msg, min_words=1)
     except:
         me("can't butt the unbuttable!")
+        raise
 
 next_butts = {}
 
