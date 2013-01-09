@@ -27,7 +27,7 @@ class word(object):
             begin = self._find_syllable(run[0])
             end   = self._find_syllable(run[1]-1)+1
             self.syllables[begin:end] = ["".join(self.syllables[begin:end])]
-            
+
     def _find_syllable(self, char):
         """Find the index of the syllable containing the character at index
            |char|"""
@@ -100,7 +100,7 @@ class sentence(object):
                 self.same_words[str(self.words[token]).lower()].append(werd)
 
     def related(self, i):
-        return self.same_words[ str(self[i]).lower() ]            
+        return self.same_words[ str(self[i]).lower() ]
 
     def __getitem__(self, i):
         if self.min + i*2 >= self.max:
@@ -133,7 +133,7 @@ class scorer(object):
                        'will', 'won', 'would', 'could', 'should', 'can', 'does',
                        'doesn', 'don', 'this', 'that', 'these', 'those',
                        'there', 'their', 'she', 'him', 'her', 'its', 'his',
-                       'hers', 'they', 'you', 'and', 'but', 'not', 'also', 
+                       'hers', 'they', 'you', 'and', 'but', 'not', 'also',
                        'from', 'for', 'once', 'been', 'have', 'had', 'who',
                        'what', 'where', 'when', 'why', 'how', 'has', 'had',
                        'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
@@ -327,7 +327,7 @@ if __name__ == '__main__':
     parser.add_option('-s', '--score',
                   action='store_true', dest='score', default=False,
                   help='show sentence score')
-    
+
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print parser.get_usage()

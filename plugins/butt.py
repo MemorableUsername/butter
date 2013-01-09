@@ -3,7 +3,8 @@ import sys
 sys.path += [".."] # heh
 
 import buttifier
-import prob
+import random
+import time
 
 @hook.command
 def butt(msg, me=None):
@@ -19,20 +20,24 @@ next_butts = {}
 @hook.singlethread
 @hook.event("PRIVMSG")
 def autobutt(_, chan=None, msg=None, bot=None, say=None):
-    rate = bot.config.get("butt_rate", 30)
+    butt_config = bot.config["butt"] or {}
+    mean      = butt_config.get("rate_mean", 300)
+    sigma     = butt_config.get("rate_sigma", 60)
+    min_score = butt_config.get("min_score",   4)
+    now = time.time()
 
     if chan[0] == '#':
-        if chan not in next_butts:
-            next_butts[chan] = prob.poissonvariate(rate)
-            return
-        next_butts[chan] -= 1
+        # public channel
+        if chan not in next_butts or next_butts[chan] < now:
+            sent, score = buttifier.score_sentence(msg)
+            if score.sentence() < min_score:
+                return
 
-    sent, score = buttifier.score_sentence(msg)
-
-    if score.sentence() == 0:
-        return
-
-    if chan[0] != '#' or next_butts[chan] <= score.sentence():
-        result = buttifier.buttify_sentence(sent, score)
-        next_butts[chan] = prob.poissonvariate(rate)
-        say(result)
+            say(buttifier.buttify_sentence(sent, score))
+            next_butts[chan] = random.normalvariate(mean, sigma) + now
+    else:
+        # private message
+        try:
+            say(buttifier.buttify(msg))
+        except:
+            pass
