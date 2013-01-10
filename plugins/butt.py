@@ -3,6 +3,7 @@ import sys
 sys.path += [".."] # heh
 
 import buttifier
+import prob
 import random
 import time
 
@@ -14,29 +15,44 @@ def butt(msg, me=None):
         me("can't butt the unbuttable!")
         raise
 
-next_butts = {}
+class ChannelState(object):
+    def __init__(self, next_time = 0, lines_left = 0):
+        self.next_time = next_time
+        self.lines_left = lines_left
+
+channel_states = {}
 
 # TODO: don't fire this when someone ran .butt!
 @hook.singlethread
 @hook.event("PRIVMSG")
 def autobutt(_, chan=None, msg=None, bot=None, say=None):
     butt_config = bot.config["butt"] or {}
-    mean      = butt_config.get("rate_mean", 300)
-    sigma     = butt_config.get("rate_sigma", 60)
-    min_score = butt_config.get("min_score",   4)
+    rate_mean  = butt_config.get("rate_mean", 300)
+    rate_sigma = butt_config.get("rate_sigma", 60)
+    lines_mean = butt_config.get("lines_mean", 20)
     now = time.time()
 
-    if chan[0] == '#':
-        # public channel
-        if chan not in next_butts or next_butts[chan] < now:
+    if chan[0] == '#': # public channel
+        if chan in channel_states:
+            state = channel_states[chan]
+            state.lines_left -= 1
+            print state
+
+            if state.next_time > now:
+                return
+
             sent, score = buttifier.score_sentence(msg)
-            if score.sentence() < min_score:
+
+            if score.sentence() == 0 or score.sentence() < state.lines_left:
                 return
 
             say(buttifier.buttify_sentence(sent, score))
-            next_butts[chan] = random.normalvariate(mean, sigma) + now
-    else:
-        # private message
+
+        channel_states[chan] = ChannelState(
+            random.normalvariate(rate_mean, rate_sigma) + now,
+            prob.poissonvariate(lines_mean)
+        )
+    else: # private message
         try:
             say(buttifier.buttify(msg))
         except:
