@@ -36,7 +36,6 @@ def autobutt(_, chan=None, msg=None, bot=None, say=None):
         if chan in channel_states:
             state = channel_states[chan]
             state.lines_left -= 1
-            print state
 
             if state.next_time > now:
                 return
