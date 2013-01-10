@@ -15,4 +15,4 @@ everywhere. Tarnishing an otherwise amazing experience."
  - Christine Chan
 
 
-[1] http://code.google.com/p/buttebot
+[1] http://code.google.com/p/buttbot
