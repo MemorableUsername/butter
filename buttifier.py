@@ -16,7 +16,7 @@ class Scorer(object):
 
     block_words = set(['the', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
                        'will', 'won', 'would', 'could', 'should', 'can', 'does',
-                       'doesn', 'don', 'this', 'that', 'these', 'those',
+                       'doesn', 'don', 'did', 'this', 'that', 'these', 'those',
                        'there', 'their', 'she', 'him', 'her', 'its', 'his',
                        'hers', 'they', 'you', 'and', 'but', 'not', 'also',
                        'from', 'for', 'once', 'been', 'have', 'had', 'who',
@@ -26,8 +26,8 @@ class Scorer(object):
                        'all', 'some'])
     block_sylls = set(['ing', 'sion', 'tion'])
 
-    good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her',
-                         'our', 'their', 'to'])
+    good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her', 'our',
+                         'their', 'to', 'this', 'that', 'these', 'those'])
 
     def __init__(self, sent, min_words=2):
         self.values = self._score_sentence(sent, min_words)

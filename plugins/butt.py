@@ -1,6 +1,6 @@
 from util import hook
 import sys
-sys.path += [".."] # heh
+sys.path += ['..'] # heh
 
 import buttifier
 import prob
@@ -24,12 +24,12 @@ channel_states = {}
 
 # TODO: don't fire this when someone ran .butt!
 @hook.singlethread
-@hook.event("PRIVMSG")
+@hook.event('PRIVMSG')
 def autobutt(_, chan=None, msg=None, bot=None, say=None):
-    butt_config = bot.config["butt"] or {}
-    rate_mean  = butt_config.get("rate_mean", 300)
-    rate_sigma = butt_config.get("rate_sigma", 60)
-    lines_mean = butt_config.get("lines_mean", 20)
+    butt_config = bot.config['butt'] or {}
+    rate_mean  = butt_config.get('rate_mean', 300)
+    rate_sigma = butt_config.get('rate_sigma', 60)
+    lines_mean = butt_config.get('lines_mean', 20)
     now = time.time()
 
     if chan[0] == '#': # public channel
