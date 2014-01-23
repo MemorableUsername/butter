@@ -1,125 +1,10 @@
 import math
 import prob
 import re
+import grammar
 
-from collections import defaultdict
-from hyphenate import hyphenate_word
-
-class word(object):
-    camelcase_ex = re.compile(r'(?<=[a-z])[A-Z]')
-
-    def __init__(self, text):
-        # get runs of repeated characters for collapsing later
-        runs = [(i.start(), i.end()) for i in re.finditer(r'(.)\1{2,}', text)]
-
-        # if the word is camelCase (or similar), break it into pieces
-        chunks = []
-        i = 0
-        for m in self.camelcase_ex.finditer(text):
-            chunks.append(text[i:m.start()])
-            i = m.start()
-        chunks.append(text[i:])
-
-        self.syllables = reduce(lambda x,y: x+hyphenate_word(y), chunks, [])
-
-        # collapse any long runs of identical characters
-        for run in runs:
-            begin = self._find_syllable(run[0])
-            end   = self._find_syllable(run[1]-1)+1
-            self.syllables[begin:end] = ["".join(self.syllables[begin:end])]
-
-    def _find_syllable(self, char):
-        """Find the index of the syllable containing the character at index
-           |char|"""
-        curr_len = 0
-        for i, s in enumerate(self.syllables):
-            curr_len += len(s)
-            if char < curr_len:
-                return i
-        raise ValueError("out of bounds")
-
-    def __getitem__(self, i):
-        return self.syllables[i]
-
-    def __setitem__(self, i, value):
-        self.syllables[i] = value
-
-    def __len__(self):
-        return len(self.syllables)
-
-    def __iter__(self):
-        return iter(self.syllables)
-
-    def __str__(self):
-        return "".join(self.syllables)
-
-class unword(word):
-    def __init__(self, text):
-        self.syllables = [text]
-
-class sentence(object):
-    words_ex = re.compile(r'([\W_]+)')
-    space_ex = re.compile(r'\s')
-
-    def __init__(self, text):
-        self.words = self.words_ex.split(text)
-        self.same_words = defaultdict(list)
-
-        # rejoin any URLs together so they count as one (un)word
-        i = 0
-        urls = []
-        while i < len(self.words):
-            if self.words[i] == "www":
-                start = i
-            elif self.words[i] == "://" and i > 0:
-                start = i-1
-            else:
-                i += 1
-                continue
-
-            end = len(self.words)
-            for j in range(i, len(self.words)):
-                if self.space_ex.search(self.words[j]):
-                    end = j
-                    break
-            self.words[start:end] = ["".join(self.words[start:end])]
-            urls.append(start)
-            i = start+1
-
-        # ignore zero-character words at the ends of the list
-        self.min = 2 if self.words[0] == '' else 0
-        self.max = len(self.words)
-        if self.words[-1] == '' and len(self.words) > 1:
-            self.max -= 2
-
-        for werd, token in enumerate(range(self.min, self.max, 2)):
-            if token in urls:
-                self.words[token] = unword(self.words[token])
-            else:
-                self.words[token] = word(self.words[token])
-                self.same_words[str(self.words[token]).lower()].append(werd)
-
-    def related(self, i):
-        return self.same_words[ str(self[i]).lower() ]
-
-    def __getitem__(self, i):
-        if self.min + i*2 >= self.max:
-            raise IndexError("index out of bounds")
-        return self.words[self.min + i*2] # skip spaces
-
-    def __len__(self):
-        return (self.max-self.min+1) / 2
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
-
-    def __str__(self):
-        return "".join([str(i) for i in self.words])
-
-
-class scorer(object):
-    class score(tuple):
+class Scorer(object):
+    class Score(tuple):
         def __new__(cls, total, each):
             return tuple.__new__(cls, each)
 
@@ -127,7 +12,7 @@ class scorer(object):
             self.total = total
 
         def __repr__(self):
-            return '<%s, %s>' % (self.total, list(self))
+            return '<{0}, {1}>'.format(self.total, list(self))
 
     block_words = set(['the', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
                        'will', 'won', 'would', 'could', 'should', 'can', 'does',
@@ -148,7 +33,7 @@ class scorer(object):
         self.values = self._score_sentence(sent, min_words)
 
     def _score_sentence(self, sent, min_words):
-        words = [self._score_word(werd) for werd in sent]
+        words = [self._score_word(word) for word in sent]
 
         for i in range(len(sent)):
             if words[i].total == 0: continue
@@ -168,23 +53,23 @@ class scorer(object):
                         (len(words) ** 0.75))
         else:
             score = 0
-        return scorer.score(score, words)
+        return self.Score(score, words)
 
-    def _score_word(self, werd):
-        if (len(str(werd)) < 3 or str(werd).lower() in self.block_words or
-            isinstance(werd, unword)):
-            return scorer.score(0, [])
+    def _score_word(self, word):
+        if (len(str(word)) < 3 or str(word).lower() in self.block_words or
+            isinstance(word, grammar.Unword)):
+            return self.Score(0, [])
 
-        sylls = [self._score_syllable(syll) for syll in werd]
-        for i in range(len(werd)):
-            if len(werd) == i+1: break
+        sylls = [self._score_syllable(syll) for syll in word]
+        for i in range(len(word)):
+            if len(word) == i+1: break
             # check if "butt" got split across syllables
-            if werd[i] == 'but' and werd[i+1][0].lower() == 't':
+            if word[i] == 'but' and word[i+1][0].lower() == 't':
                 sylls[i] = 0
 
         score = int(sum(sylls) / math.sqrt(len(sylls)))
         if score == 0:
-            return scorer.score(0, [])
+            return self.Score(0, [])
 
         # earlier syllables are funnier
         for j, val in enumerate(sylls):
@@ -195,7 +80,7 @@ class scorer(object):
         if len(sylls) == 1:
             score += 3
 
-        return scorer.score(score, sylls)
+        return self.Score(score, sylls)
 
     def _score_syllable(self, syll):
         syll = syll.lower()
@@ -239,30 +124,9 @@ class scorer(object):
             return self.values[i][j]
 
 
-plurals = set(['men', 'women', 'feet', 'geese', 'teeth', 'lice', 'mice',
-               'children'])
-def is_plural(word):
-    word = word.lower()
-    if word[-1] == 's' and word[-2] not in 'ius': return True
-    return word in plurals
-
-past_tense = set([
-    'ate', 'became', 'began', 'bent', 'blew', 'broke', 'bought', 'brought',
-    'built', 'burnt', 'came', 'caught', 'chose', 'did', 'drew', 'drank',
-    'dreamt', 'drove', 'dug', 'fell', 'flew', 'forgot', 'fought', 'found',
-    'gave', 'grew', 'heard', 'held', 'hid', 'kept', 'knew', 'leapt', 'learnt',
-    'made', 'meant', 'met', 'paid', 'ran', 'rang', 'said', 'sang', 'sank',
-    'sent', 'shook', 'shot', 'slept', 'slid', 'sold', 'spent', 'spoke', 'stank',
-    'stole', 'stood', 'stuck', 'swam', 'taught', 'threw', 'told', 'took',
-    'tore', 'went', 'woke', 'won', 'wore', 'wrote'])
-def is_past_tense(word):
-    word = word.lower()
-    if word[-2:] == 'ed' and word[-3] not in 'ae': return True
-    return word in past_tense
-
-def score_sentence(text, scorer=scorer, min_words=2):
-    sent = sentence(text)
-    score = scorer(sent, min_words)
+def score_sentence(text, scorer=Scorer, min_words=2):
+    sent = grammar.Sentence(text)
+    score = Scorer(sent, min_words)
     return sent, score
 
 def buttify_sentence(sent, score, rate=60):
@@ -289,9 +153,9 @@ def buttify_word(sentence, word, syllable):
         butt = 'b' + 'u'*(m.end() - m.start()) + 'tt'
 
     if syllable == len(sentence[word])-1:
-        if is_plural(str(sentence[word])):
+        if grammar.is_plural(str(sentence[word])):
             butt += 's'
-        elif is_past_tense(str(sentence[word])):
+        elif grammar.is_past_tense(str(sentence[word])):
             butt += 'ed'
 
     if sentence[word][syllable].isupper():
@@ -310,7 +174,7 @@ def buttify_word(sentence, word, syllable):
     if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
         sentence[word-1][0] = sentence[word-1][0][0:1]
 
-def buttify(text, scorer=scorer, rate=60, min_words=2):
+def buttify(text, scorer=Scorer, rate=60, min_words=2):
     sent, score = score_sentence(text, scorer, min_words)
     if score.sentence() == 0:
         raise ValueError('sentence has too few buttable words')
@@ -334,15 +198,15 @@ if __name__ == '__main__':
         exit(1)
 
     if options.score:
-        sent = sentence(args[0])
-        score = scorer(sent)
+        sent = grammar.Sentence(args[0])
+        score = Scorer(sent)
 
-        print "%d:" % score.sentence(),
+        print '{0}:'.format(score.sentence()),
         for i, word in enumerate(sent):
             if score.word(i) == 0:
-                print "-".join(word)+"(0)",
+                print '-'.join(word) + '(0)',
             else:
-                print "-".join(word)+"(%d: %s)" % (score.word(i),
-                                                   score.syllable(i)),
+                print '-'.join(word) + '({0}: {1})'.format(
+                    score.word(i), score.syllable(i)),
     else:
         print buttify(args[0], min_words=options.min_words)
