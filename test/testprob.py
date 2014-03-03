@@ -30,5 +30,11 @@ class ProbTest(unittest.TestCase):
             counts[prob.lookup(cum, i)] += 1
         self.assertEqual(counts, [10, 0, 5, 10])
 
+    def testLinspace(self):
+        self.assertEqual(list(prob.linspace(2.0, 3.0, 5)),
+                         [2.0, 2.25, 2.5, 2.75, 3.0])
+        self.assertEqual(list(prob.linspace(2.0, 3.0, 4, endpoint=False)),
+                         [2.0, 2.25, 2.5, 2.75])
+
 if __name__ == '__main__':
     unittest.main()

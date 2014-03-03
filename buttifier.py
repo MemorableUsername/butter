@@ -61,20 +61,20 @@ class Scorer(object):
             return self.Score(0, [])
 
         sylls = [self._score_syllable(syll) for syll in word]
-        for i in range(len(word)):
-            if len(word) == i+1: break
+        for i in range(len(word) - 1):
             # check if "butt" got split across syllables
-            if word[i] == 'but' and word[i+1][0].lower() == 't':
+            if 'butt' in (word[i] + word[i+1]).lower():
                 sylls[i] = 0
+            elif word[i+1][0].lower() == 't':
+                sylls[i] += 1
 
         score = int(sum(sylls) / math.sqrt(len(sylls)))
         if score == 0:
             return self.Score(0, [])
 
         # earlier syllables are funnier
-        for j, val in enumerate(sylls):
-            if val != 0:
-                sylls[j] += min((len(sylls)-j-1)**2, 16)
+        for i, mult in enumerate(prob.linspace( 2.0, 1.0, len(sylls) )):
+            sylls[i] = int(sylls[i] * mult)
 
         # one-syllable words are always easy to butt
         if len(sylls) == 1:

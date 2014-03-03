@@ -59,3 +59,14 @@ def poissonvariate(lambd):
         factorial *= i
         x -= coeff * (lambd**i/factorial)
         if x < 0: return i
+
+def linspace(start, stop, num, endpoint=True):
+    """Like range(), but takes a count for the number of samples; see also
+    Numpy."""
+    if endpoint:
+        num -= 1
+    step = (stop - start) / num
+    for i in range(num):
+        yield start + step * i
+    if endpoint:
+        yield stop
