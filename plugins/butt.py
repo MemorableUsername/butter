@@ -3,6 +3,7 @@ import sys
 sys.path += ['..'] # heh
 
 import buttifier
+import grammar
 import prob
 import random
 import time
@@ -14,6 +15,21 @@ def butt(msg, me=None):
     except:
         me("can't butt the unbuttable!")
         raise
+
+@hook.command
+def debutt(msg, me=None):
+    sent = grammar.Sentence(msg)
+    score = buttifier.Scorer(sent)
+    result = ''
+
+    result += '{0}:'.format(score.sentence())
+    for i, word in enumerate(sent):
+        if score.word(i) == 0:
+            result += '-'.join(word) + '(0)'
+        else:
+            result += '-'.join(word) + '({0}: {1})'.format(
+                score.word(i), score.syllable(i))
+    return result
 
 class ChannelState(object):
     def __init__(self, next_time = 0, lines_left = 0):
