@@ -1,10 +1,11 @@
-Buttebot
-========
+Butter
+======
 
-Buttebot is a bot which butts things (in Python). The e stands for "extra"!
+Butter is a state-of-the-art algorithm designed to turn ordinary sentences into
+comedy masterpieces with the power of butts.
 
-Many thanks to the authors of the original Buttbot[1] and all the Cobolleros
-who've stayed true to Butt(e)bot throughout the years.
+Many thanks to the authors of the original Buttbot[1], without whom this would
+never have been possible.
 
 What People Are Saying
 ----------------------
@@ -13,6 +14,5 @@ What People Are Saying
 everywhere. Tarnishing an otherwise amazing experience."
 
  - Christine Chan
-
 
 [1] http://code.google.com/p/buttbot
