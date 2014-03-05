@@ -73,8 +73,9 @@ class Scorer(object):
             return self.Score(0, [])
 
         # earlier syllables are funnier
-        for i, mult in enumerate(prob.linspace( 2.0, 1.0, len(sylls) )):
-            sylls[i] = int(sylls[i] * mult)
+        if len(sylls) > 1:
+            for i, mult in enumerate(prob.linspace( 2.0, 1.0, len(sylls) )):
+                sylls[i] = int(sylls[i] * mult)
 
         # one-syllable words are always easy to butt
         if len(sylls) == 1:
@@ -198,8 +199,7 @@ if __name__ == '__main__':
         exit(1)
 
     if options.score:
-        sent = grammar.Sentence(args[0])
-        score = Scorer(sent)
+        sent, score = score_sentence(args[0], min_words=options.min_words)
 
         print '{0}:'.format(score.sentence()),
         for i, word in enumerate(sent):

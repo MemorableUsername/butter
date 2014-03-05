@@ -35,6 +35,7 @@ class ProbTest(unittest.TestCase):
                          [2.0, 2.25, 2.5, 2.75, 3.0])
         self.assertEqual(list(prob.linspace(2.0, 3.0, 4, endpoint=False)),
                          [2.0, 2.25, 2.5, 2.75])
+        self.assertRaises(Exception, prob.linspace, (1.0, 2.0, 1))
 
 if __name__ == '__main__':
     unittest.main()

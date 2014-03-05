@@ -63,6 +63,9 @@ def poissonvariate(lambd):
 def linspace(start, stop, num, endpoint=True):
     """Like range(), but takes a count for the number of samples; see also
     Numpy."""
+    if num < 2:
+        raise Exception('must have at least 2 steps!')
+
     if endpoint:
         num -= 1
     step = (stop - start) / num
