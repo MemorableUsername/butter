@@ -1,6 +1,5 @@
 import math
 import random
-import itertools
 
 def cumsum(l, t=0):
     """Return the cumulative sum of an iterable"""
@@ -44,21 +43,6 @@ def weighted_choice(weights):
     cum = [0]+cumsum(weights)
     n = cum[-1]
     return lookup(cum, random.randrange(n))
-
-def poissonvariate(lambd):
-    x = random.random()
-
-    # special-case i = 0
-    coeff = math.exp(-lambd)
-    factorial = 1.0
-    x -= coeff
-    if x < 0: return 0
-
-    # i = (1, 2, ...)
-    for i in itertools.count(1):
-        factorial *= i
-        x -= coeff * (lambd**i/factorial)
-        if x < 0: return i
 
 def linspace(start, stop, num, endpoint=True):
     """Like range(), but takes a count for the number of samples; see also
