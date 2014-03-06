@@ -20,7 +20,7 @@ class Scorer(object):
         'isn', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
         'will', 'won', 'would', 'can', 'could', 'should',
         'does', 'doesn', 'don', 'did',
-        'has', 'had', 'hadn', 'have', 'haven'
+        'has', 'had', 'hadn', 'have', 'haven',
         'this', 'that', 'these', 'those', 'here', 'there',
         'she', 'him', 'her', 'its', 'his', 'hers',
         'they', 'their', 'theirs', 'you', 'your',
