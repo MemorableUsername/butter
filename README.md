@@ -7,6 +7,11 @@ comedy masterpieces with the power of butts.
 Many thanks to the authors of the original Buttbot[1], without whom this would
 never have been possible.
 
+Try it Out!
+-----------
+
+Just click on over to http://butts.boner.io/ to see the algorithm in action!
+
 What People Are Saying
 ----------------------
 
