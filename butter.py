@@ -14,20 +14,28 @@ class Scorer(object):
         def __repr__(self):
             return '<{0}, {1}>'.format(self.total, list(self))
 
-    block_words = set(['the', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
-                       'will', 'won', 'would', 'could', 'should', 'can', 'does',
-                       'doesn', 'don', 'did', 'this', 'that', 'these', 'those',
-                       'there', 'their', 'she', 'him', 'her', 'its', 'his',
-                       'hers', 'they', 'you', 'and', 'but', 'not', 'also',
-                       'from', 'for', 'once', 'been', 'have', 'had', 'who',
-                       'what', 'where', 'when', 'why', 'how', 'has', 'had',
-                       'have', 'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
-                       'with', 'without', 'then', 'which', 'your', 'too', 'any',
-                       'all', 'some'])
-    block_sylls = set(['ing', 'sion', 'tion'])
+    block_words = {
+        'the', 'and', 'but', 'not', 'also', 'from', 'for', 'with', 'without',
+        'then', 'which', 'too', 'any', 'all', 'some', 'once', 'been',
+        'isn', 'are', 'aren', 'was', 'wasn', 'were', 'weren',
+        'will', 'won', 'would', 'can', 'could', 'should',
+        'does', 'doesn', 'don', 'did',
+        'has', 'had', 'hadn', 'have', 'haven'
+        'this', 'that', 'these', 'those', 'here', 'there',
+        'she', 'him', 'her', 'its', 'his', 'hers',
+        'they', 'their', 'theirs', 'you', 'your',
+        'who', 'what', 'where', 'when', 'why', 'how',
+        'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
+    }
 
-    good_prewords = set(['the', 'an', 'a', 'my', 'your', 'his', 'her', 'our',
-                         'their', 'to', 'this', 'that', 'these', 'those'])
+    good_prewords = {
+        'the', 'an', 'a', 'my', 'your', 'his', 'her', 'our', 'their', 'to',
+        'this', 'that', 'these', 'those',
+    }
+
+    block_sylls = {
+        'ing', 'sion', 'tion',
+    }
 
     def __init__(self, sent, min_words=2):
         self.values = self._score_sentence(sent, min_words)
