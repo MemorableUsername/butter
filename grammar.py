@@ -50,6 +50,9 @@ class Word(object):
         return iter(self.syllables)
 
     def __str__(self):
+        return unicode(self).encode('utf_8')
+
+    def __unicode__(self):
         return ''.join(self.syllables)
 
 class Unword(Word):
@@ -119,16 +122,20 @@ class Sentence(object):
             yield self[i]
 
     def __str__(self):
-        return ''.join((str(i) for i in self.words))
+        return unicode(self).encode('utf_8')
 
-plurals = set(['men', 'women', 'feet', 'geese', 'teeth', 'lice', 'mice',
-               'children'])
+    def __unicode__(self):
+        return ''.join((unicode(i) for i in self.words))
+
+plurals = {
+    'men', 'women', 'feet', 'geese', 'teeth', 'lice', 'mice', 'children',
+}
 def is_plural(word):
     word = str(word).lower()
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
-past_tense = set([
+past_tense = {
     'ate', 'became', 'began', 'bent', 'blew', 'broke', 'bought', 'brought',
     'built', 'burnt', 'came', 'caught', 'chose', 'did', 'drew', 'drank',
     'dreamt', 'drove', 'dug', 'fell', 'flew', 'forgot', 'fought', 'found',
@@ -136,8 +143,9 @@ past_tense = set([
     'made', 'meant', 'met', 'paid', 'ran', 'rang', 'said', 'sang', 'sank',
     'sent', 'shook', 'shot', 'slept', 'slid', 'sold', 'spent', 'spoke', 'stank',
     'stole', 'stood', 'stuck', 'swam', 'taught', 'threw', 'told', 'took',
-    'tore', 'went', 'woke', 'won', 'wore', 'wrote'])
+    'tore', 'went', 'woke', 'won', 'wore', 'wrote',
+}
 def is_past_tense(word):
     word = str(word).lower()
-    if word[-2:] == 'ed' and word[-3] not in 'ae': return True
+    if len(word) > 2 and word[-2:] == 'ed' and word[-3] not in 'ae': return True
     return word in past_tense
