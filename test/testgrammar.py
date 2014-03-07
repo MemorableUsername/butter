@@ -35,5 +35,10 @@ class GrammarTest(unittest.TestCase):
         self.assertEqual(str(sent[1]), "url")
         self.assertEqual(str(sent[2]), "http://www.example.com/")
 
+    def test_unicode(self):
+        sent = grammar.Sentence(u"M\xf6tley Cr\xfce")
+        self.assertEqual(str(sent), "M\xc3\xb6tley Cr\xc3\xbce")
+        self.assertEqual(unicode(sent), u"M\xf6tley Cr\xfce")
+
 if __name__ == '__main__':
     unittest.main()
