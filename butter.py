@@ -48,7 +48,7 @@ class Scorer(object):
 
             # words after good pre-words
             if i > 0:
-                prev = str(sent[i-1]).lower()
+                prev = unicode(sent[i-1]).lower()
                 if prev in self.good_prewords:
                     words[i].total += 5
 
@@ -64,7 +64,8 @@ class Scorer(object):
         return self.Score(score, words)
 
     def _score_word(self, word):
-        if (len(str(word)) < 3 or str(word).lower() in self.block_words or
+        if (len(unicode(word)) < 3 or
+            unicode(word).lower() in self.block_words or
             isinstance(word, grammar.Unword)):
             return self.Score(0, [])
 
@@ -151,7 +152,7 @@ def buttify_sentence(sent, score, rate=60):
         if curr_count >= count:
             break
 
-    return str(sent)
+    return unicode(sent)
 
 def buttify_word(sentence, word, syllable):
     butt = 'butt'
@@ -162,9 +163,9 @@ def buttify_word(sentence, word, syllable):
         butt = 'b' + 'u'*(m.end() - m.start()) + 'tt'
 
     if syllable == len(sentence[word])-1:
-        if grammar.is_plural(str(sentence[word])):
+        if grammar.is_plural(unicode(sentence[word])):
             butt += 's'
-        elif grammar.is_past_tense(str(sentence[word])):
+        elif grammar.is_past_tense(unicode(sentence[word])):
             butt += 'ed'
 
     if sentence[word][syllable].isupper():
@@ -180,7 +181,7 @@ def buttify_word(sentence, word, syllable):
         sentence[word][syllable] = sentence[word][syllable][:-1]
 
     # if this is the first syllable and the previous word is "an", fix it
-    if syllable == 0 and word > 0 and str(sentence[word-1]).lower() == 'an':
+    if syllable == 0 and word > 0 and unicode(sentence[word-1]).lower() == 'an':
         sentence[word-1][0] = sentence[word-1][0][0:1]
 
 def buttify(text, scorer=Scorer, rate=60, min_words=2):
@@ -210,12 +211,12 @@ if __name__ == '__main__':
     if options.score:
         sent, score = score_sentence(text, min_words=options.min_words)
 
-        print '{0}:'.format(score.sentence()),
+        print u'{0}:'.format(score.sentence()),
         for i, word in enumerate(sent):
             if score.word(i) == 0:
-                print '-'.join(word) + '(0)',
+                print u'-'.join(word) + u'(0)',
             else:
-                print '-'.join(word) + '({0}: {1})'.format(
+                print u'-'.join(word) + u'({0}: {1})'.format(
                     score.word(i), score.syllable(i)),
     else:
         print buttify(text, min_words=options.min_words)
