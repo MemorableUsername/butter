@@ -65,8 +65,8 @@ class Unword(Word):
 class Sentence(object):
     """A class representing a whole sentence; comprised of Words and Unwords."""
 
-    words_ex = re.compile(r'([\W_]+)')
-    space_ex = re.compile(r'\s')
+    words_ex = re.compile(r'([\W_]+)', re.UNICODE)
+    space_ex = re.compile(r'\s', re.UNICODE)
 
     def __init__(self, text):
         self.words = self.words_ex.split(text)

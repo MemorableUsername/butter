@@ -206,8 +206,9 @@ if __name__ == '__main__':
         print parser.get_usage()
         exit(1)
 
+    text = args[0].decode('utf_8')
     if options.score:
-        sent, score = score_sentence(args[0], min_words=options.min_words)
+        sent, score = score_sentence(text, min_words=options.min_words)
 
         print '{0}:'.format(score.sentence()),
         for i, word in enumerate(sent):
@@ -217,4 +218,4 @@ if __name__ == '__main__':
                 print '-'.join(word) + '({0}: {1})'.format(
                     score.word(i), score.syllable(i)),
     else:
-        print buttify(args[0], min_words=options.min_words)
+        print buttify(text, min_words=options.min_words)

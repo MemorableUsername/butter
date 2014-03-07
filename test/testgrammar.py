@@ -37,8 +37,11 @@ class GrammarTest(unittest.TestCase):
 
     def test_unicode(self):
         sent = grammar.Sentence(u"M\xf6tley Cr\xfce")
+
         self.assertEqual(str(sent), "M\xc3\xb6tley Cr\xc3\xbce")
         self.assertEqual(unicode(sent), u"M\xf6tley Cr\xfce")
+
+        self.assertEqual(u"-".join(grammar.Word(u"M\xf6tley")), u"M\xf6t-ley")
 
 if __name__ == '__main__':
     unittest.main()
