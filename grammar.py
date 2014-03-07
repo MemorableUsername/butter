@@ -104,10 +104,10 @@ class Sentence(object):
                 self.words[token] = Unword(self.words[token])
             else:
                 self.words[token] = Word(self.words[token])
-                self.same_words[str(self.words[token]).lower()].append(word)
+                self.same_words[unicode(self.words[token]).lower()].append(word)
 
     def related(self, i):
-        return self.same_words[ str(self[i]).lower() ]
+        return self.same_words[ unicode(self[i]).lower() ]
 
     def __getitem__(self, i):
         if self.min + i*2 >= self.max:
@@ -131,7 +131,7 @@ plurals = {
     'men', 'women', 'feet', 'geese', 'teeth', 'lice', 'mice', 'children',
 }
 def is_plural(word):
-    word = str(word).lower()
+    word = unicode(word).lower()
     if word[-1] == 's' and word[-2] not in 'ius': return True
     return word in plurals
 
@@ -146,6 +146,6 @@ past_tense = {
     'tore', 'went', 'woke', 'won', 'wore', 'wrote',
 }
 def is_past_tense(word):
-    word = str(word).lower()
+    word = unicode(word).lower()
     if len(word) > 2 and word[-2:] == 'ed' and word[-3] not in 'ae': return True
     return word in past_tense
