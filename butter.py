@@ -23,7 +23,7 @@ class Scorer(object):
         'has', 'had', 'hadn', 'have', 'haven',
         'this', 'that', 'these', 'those', 'here', 'there',
         'she', 'him', 'her', 'its', 'his', 'hers',
-        'they', 'their', 'theirs', 'you', 'your',
+        'they', 'their', 'theirs', 'you', 'your', 'our', 'ours',
         'who', 'what', 'where', 'when', 'why', 'how',
         'yes', 'yeah', 'yah', 'yep', 'nah', 'nope',
     }
@@ -141,14 +141,23 @@ def score_sentence(text, scorer=Scorer, min_words=2):
 
 def buttify_sentence(sent, score, rate=60):
     count = min(sum(score.word())/rate+1, max(len(sent)/4, 1))
-    words = prob.weighted_sample(score.word(), count)
+    word_indices = prob.weighted_sample(score.word(), count)
+
+    # Get all the instances of the words we randomly selected.
+    all_words = []
+    for related in (sent.related(i) for i in word_indices):
+        if related not in all_words:
+            all_words.append(related)
+
+    # Sort by the most common word first, so that we prioritize butting it.
+    all_words.sort(lambda x, y: len(y) - len(x))
 
     curr_count = 0
-    for i in words:
-        syllable = prob.weighted_choice(score.syllable(i))
-        for j in sent.related(i):
-            buttify_word(sent, j, syllable)
-            curr_count += 1
+    for group in all_words:
+        syllable = prob.weighted_choice(score.syllable(group[0]))
+        curr_count += len(group)
+        for word in group:
+            buttify_word(sent, word, syllable)
         if curr_count >= count:
             break
 
