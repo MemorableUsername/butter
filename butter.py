@@ -213,19 +213,19 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
-        print parser.get_usage()
+        print(parser.get_usage())
         exit(1)
 
     text = args[0].decode('utf_8')
     if options.score:
         sent, score = score_sentence(text, min_words=options.min_words)
 
-        print u'{0}:'.format(score.sentence()),
+        print(u'{0}:'.format(score.sentence()))
         for i, word in enumerate(sent):
             if score.word(i) == 0:
-                print u'-'.join(word) + u'(0)',
+                print(u'-'.join(word) + u'(0)')
             else:
-                print u'-'.join(word) + u'({0}: {1})'.format(
-                    score.word(i), score.syllable(i)),
+                print(u'-'.join(word) + u'({0}: {1})'.format(
+                    score.word(i), score.syllable(i)))
     else:
-        print buttify(text, min_words=options.min_words)
+        print(buttify(text, min_words=options.min_words))
