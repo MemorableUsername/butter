@@ -15,7 +15,7 @@ def lookup(p, k):
     hi = len(p)-1
     while True:
         if lo == hi: return lo
-        mid = hi - (hi-lo)/2
+        mid = hi - (hi-lo)//2
         if p[mid] > k:
             hi = mid-1
         else:
@@ -29,7 +29,7 @@ def weighted_sample(weights, k):
     result = [None] * k
     selected = set()
 
-    for i in xrange(k):
+    for i in range(k):
         j = random.randrange(n)
         while lookup(cum, j) in selected:
             j = random.randrange(n)
